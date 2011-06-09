@@ -44,19 +44,21 @@ return $novedad->NovedadTipo === 'Revision de documentos';
             <option value="">Seleccione</option>
 
             @if ($solicitud->dependencia == 'INTERIOR')
-            @if (!$revisionDocumentos)
-            <option value="1">Revision de documentos</option>
-            @endif
-            @if ($solicitud->modalidad != 'PASACALLES')
-            <option value="5">Presentación de requisitos finales</option>
+               @if (!$revisionDocumentos)
+               <option value="1">Revision de documentos</option>
+               @endif
+
+               @if ($solicitud->modalidad != 'PASACALLES')
+               <option value="5">Presentación de requisitos finales</option>
+               @endif
+
+               @if ($solicitud->modalidad == 'VALLAS')
+               <option value="6">Revisión documentos finales</option>
+               @endif
+
+               <option value="8">Acto administrativo</option>
             @endif
 
-            @if ($solicitud->modalidad == 'VALLAS')
-            <option value="6">Revisión documentos finales</option>
-            @endif
-
-            <option value="8">Acto administrativo</option>
-            @endif
             @if ($solicitud->dependencia == 'PLANEACION')
             <option value="2">Concepto tecnico planeación</option>
             @endif
