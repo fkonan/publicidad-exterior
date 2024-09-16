@@ -13,6 +13,9 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+
+        Commands\Automatizacion::class,
+        Commands\Pagos::class,
         //
     ];
 
@@ -23,7 +26,12 @@ class Kernel extends ConsoleKernel
      * @return void
      */
     protected function schedule(Schedule $schedule)
-    {
+    {   
+        $schedule->command('pagos:realizados')->everyMinute()->timezone('America/Bogota');
+        $schedule->command('revision:diaria')->dailyAt('07:00')->timezone('America/Bogota');
+        // $schedule->command('revision:diaria')->everyMinute()->timezone('America/Bogota');
+        
+        // $schedule->command('revision:diaria')->dailyAt('07:46')->timezone('America/Bogota');
         // $schedule->command('inspire')->hourly();
     }
 

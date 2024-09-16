@@ -1,0 +1,62 @@
+/* file input multiple */
+
+#files-area {
+    width: 100%;
+    margin: 0 auto;
+}
+.file-block {
+    /* border-radius: 10px;
+    background-color: rgba(144, 163, 203, 0.2);
+    margin: 5px;
+    color: initial;
+    display: inline-flex; */
+
+    display: inline-flex;
+   align-items: center;
+   flex-direction: row;
+   border-style: hidden;
+   vertical-align: middle;
+   justify-content: space-between;
+   text-align: center;
+   z-index: 1;
+   margin-top: 12px;
+   height: calc(2rem + 0.75rem + 2px);
+   padding: 0.375rem 1.25rem;
+   line-height: 1.5;
+   color: #3366cc;
+   background-color: #e5eefb;
+   border-width: 2px;
+   width: 100%;
+   border-radius: 1.7rem;
+   box-shadow: 0px 0px 2px rgb(0 0 0 / 16%);
+}
+.file-block > span.name {
+    padding-right: 10px;
+    width: max-content;
+    display: inline-flex;
+    color: #3366cc;
+    text-align: center;
+}
+.file-delete {
+    display: flex;
+    width: 24px;
+    color: #3366cc;
+    background-color: #6eb4ff 0;
+    font-size: large;
+    justify-content: center;
+    margin-right: 3px;
+    cursor: pointer;
+}
+.file-delete:hover {
+    background-color: rgba(144, 163, 203, 0.2);
+    border-radius: 15px;
+}
+.file-delete > span {
+    transform: rotate(45deg);
+}
+
+.govco-icon {
+   font-family: "Govco Icon";
+   font-size: 1.5em;
+   color: #004884;
+}

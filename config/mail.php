@@ -84,8 +84,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => 'no-responder3@bucaramanga.gov.co',
+        'name' => 'Alcaldia de Bucaramanga',
     ],
 
     /*

@@ -1,0 +1,356 @@
+.circle_uno {
+    background: #3366cc;
+    border-radius: 0.5em;
+    -moz-border-radius: 0.5em;
+    -webkit-border-radius: 0.5em;
+    color: #ffffff;
+    display: inline-block;
+    line-height: 1.1em;
+    margin-right: 2px;
+    text-align: center;
+    width: 1.1em;
+    font-size: 0.9rem;
+}
+
+.circle_dos {
+    background: transparent;
+    border-radius: 0.5em;
+    -moz-border-radius: 0.5em;
+    -webkit-border-radius: 0.5em;
+    display: inline-block;
+    line-height: 1.1em;
+    margin-right: 2px;
+    color: #4b4b4b;
+    text-align: center;
+    width: 1.1em;
+    font-size: 0.9rem;
+    border: 1px solid #4b4b4b;
+}
+
+.circle_cero {
+    background: #BABABA;
+    border-radius: 0.5em;
+    -moz-border-radius: 0.5em;
+    -webkit-border-radius: 0.5em;
+    color: #ffffff;
+    display: inline-block;
+    line-height: 1.1em;
+    margin-right: 2px;
+    text-align: center;
+    width: 1.1em;
+    font-size: 0.9rem;
+}
+
+
+@media (max-width: 500px) {
+    .img-fluid {
+        max-width: 100% !important;
+        padding-bottom: 15px !important;
+    }
+    * {
+        font-size: 0.7rem;
+    }
+    p#barra_progreso {
+        font-size: 0.65rem !important;
+    }  
+    .breadcrumb-text{
+        font-size: 0.8rem!important;
+    }
+    .text-miga{
+        font-size: 0.8rem!important;
+    }    
+    .text-discapacidad{
+        font-size: 0.6rem!important;
+    }     
+
+    .govco-icon-shortr-arrow::before {
+        content: "\e91c";
+    }
+    .custom-file-label.label-file-govco{
+        margin-top: 0px !important;
+    }
+}
+
+.btn-examinar{
+  
+    background-color: #3366CC!important;
+    color: white!important;
+
+}
+
+.page__footer{
+    padding-bottom: 10px !important;
+}
+
+/* ESTILOS GOV-CO SELECTS */
+
+.select2-dropdown { 
+    border: 1px solid #3366cc!important;
+   }
+   .select2-container--default .select2-search--dropdown .select2-search__field {
+       border: 1px solid #3366cc!important;
+   }
+   .select2-container--default .select2-results__option--highlighted[aria-selected=true] {
+       background-color: #3366cc!important;
+       color: white!important;
+   }
+   .select2-results__option--highlighted {
+       background-color: #E6EFFD !important;
+       color: #4B4B4B!important;
+   }
+   
+   .select2-container--default .select2-results__option[aria-selected=true] {
+       background-color: #3366cc!important;
+       color: white!important;
+   }
+   
+   .select2-container--default .select2-selection--single .select2-selection__arrow b {
+       border-color: #3366CC transparent transparent transparent;
+   }
+   
+   .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+       border-color: transparent transparent #3366CC transparent;
+   
+   }
+
+@media only screen and (max-width: 572px){
+  
+    .g-recaptcha iframe {
+      max-width: 100%;
+      transform:scale(0.77);
+      -webkit-transform:scale(0.77);
+      transform-origin: center center;
+      -webkit-transform-origin: center center;
+    }
+    #rc-imageselect {
+      transform:scale(0.77);
+      -webkit-transform:scale(0.77);
+      transform-origin:0 0;
+      -webkit-transform-origin:0 0;
+    }
+
+    .img_alcaldia{
+        margin-top: 2.5rem!important;
+    }
+
+    .gov-co-footer .gov-co-footer-presetacion>.gov-co-footer-autoridad>.footer-politicas.poli-tramites{
+        position: unset!important;
+    }
+    .gov-co-footer .gov-co-footer-presetacion>.gov-co-footer-autoridad>.footer-politicas.poli-tramites .gov-co-politicas{
+        justify-content: start!important;
+    }
+    
+  }
+  
+  .g-recaptcha > div > div{
+    margin: 4px auto !important;
+    text-align: center;
+    width: auto !important;
+    height: auto !important;
+  }
+  .accordion-govco .card .card-header button {    
+    background-color: #f6f8f9!important;
+    border: 2px solid #f6f8f9!important;
+  }
+  .accordion-govco .card .card-header button.collapsed {
+      margin-bottom:20px!important;
+      box-shadow: 0px 4px 0px #bababa24;
+  }
+  .bg-color-selago {
+    background-color: #f6f8f9!important;
+  }
+
+   input:focus {
+    outline: none!important;
+    border: 1px solid #3366CC !important;
+    box-shadow: 1px 4px 0px #3366cc24!important;
+}
+.form-control:focus {
+    box-shadow: 1px 4px 0px #3366cc24!important;
+}
+
+button.btn-middle:focus{
+    background-color: #004884 !important;
+    border-color: #004884 !important;
+    color: white !important;
+
+}
+
+/* validacion realtime */
+
+label span {
+    font-size: 1rem;
+  }
+  
+  label.error {
+      color: #A80521;
+      font-size: 1rem;
+      display: block;
+      margin-top: 5px;
+  }
+  
+  input.error, textarea.error {
+      border: 1px dashed #A80521;
+      font-weight: 300;
+      color: #A80521;
+  }
+
+  .form-control.is-invalid{
+    border-color: #A80521!important;
+  }
+  .form-control.is-valid{
+    border-color: #069169!important;
+}
+
+  /* input file */
+  .colored-toast.swal2-icon-error {
+    background-color: #f27474 !important;
+  }
+
+  .custom-file-label.label-file-govco--over{
+      background-color: #BABABA!important;
+      color: white!important;
+  }
+
+  .custom-file-label.label-file-govco:hover{
+    background-color: #3366CC!important;
+    color: white!important;
+    cursor: pointer!important;
+    border:1px solid #3366CC!important;
+}
+
+
+
+.govco-icon-attached-n:hover{
+     color: white!important;
+}
+  
+
+.check-style {
+    width: 20px;
+    height: 20px;
+    color: #0B457F;
+    vertical-align: middle;
+    -webkit-appearance: none;
+    background-color: transparent;
+    border: 2px solid #0B457F;
+    border: 0;
+    outline: 0;
+    flex-grow: 0;
+    border-radius: 5px;
+    background-color: #FFFFFF;
+    transition: background 300ms;
+    cursor: pointer;
+  }
+  
+  
+  /* Pseudo element for check styling */
+  
+  .check-style::before {
+    content: "";
+    color: transparent;
+    display: block;
+    width: inherit;
+    height: inherit;
+    border-radius: 5px;
+    border: 0;
+    background-color: transparent;
+    background-size: contain; 
+    background-color: transparent;
+    border: 2px solid #0B457F;
+  }
+  
+  
+  /* Checked */
+  
+  .check-style:checked {
+    background-color: currentcolor;
+  }
+  
+  .check-style:checked::before {
+    box-shadow: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22px' height='22px' viewBox='0 0 24 24'%3E %3Cpath d='M15.88 8.29L10 14.17l-1.88-1.88a.996.996 0 1 0-1.41 1.41l2.59 2.59c.39.39 1.02.39 1.41 0L17.3 9.7a.996.996 0 0 0 0-1.41c-.39-.39-1.03-.39-1.42 0z' fill='%23fff'/%3E %3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 29px;
+
+  }
+
+  /* RADIO BUTTON */
+
+.radio-per-gov:checked,
+.radio-per-gov:not(:checked) {
+    position: absolute;
+    left: -9999px;
+}
+
+.radio-per-gov:checked + label,
+.radio-per-gov:not(:checked) + label
+{
+    position: relative;
+    padding-left: 28px;
+    cursor: pointer;
+    line-height: 20px;
+    display: inline-block;
+    color: #0B457F;
+}
+
+.radio-per-gov:checked + label.error, .radio-per-gov:not(:checked) + label.error{
+    color: red;
+}
+.radio-per-gov:checked + label:before,
+.radio-per-gov:not(:checked) + label:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #0B457F;
+    border-radius: 100%;
+    background: #fff;
+}
+.radio-per-gov:checked + label:after,
+.radio-per-gov:not(:checked) + label:after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background: #0B457F;
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    border-radius: 100%;
+    -webkit-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+.radio-per-gov:not(:checked) + label:after {
+    opacity: 0;
+    -webkit-transform: scale(0);
+    transform: scale(0);
+}
+.radio-per-gov:checked + label:after {
+    opacity: 1;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+}
+
+.gov-co-tramite-card{
+    border: 2px solid #E6EFFD!important;
+    border-radius: 10px!important;
+}
+
+/* alerta sugerencias */
+
+#alert-gov-co-error {
+    position: fixed!important;
+    bottom: 0!important;
+    width: 100%!important;
+    z-index: 1000;
+}
+
+
+ 
+
+
+ 
+
