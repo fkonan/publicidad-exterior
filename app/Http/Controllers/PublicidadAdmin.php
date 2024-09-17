@@ -141,15 +141,15 @@ class PublicidadAdmin extends Controller
             $pendiente_pago = true;
          }
       }
+
       return view($vista, compact('solicitud', 'detalle', 'adjunto', 'novedades', 'documentos', 'pendiente_pago', 'fecha_limite'));
    }
 
    public function AgregarNovedad(Request $req)
    {
       $solicitud = Publicidad::Find($req->SolicitudId);
-
       if (!empty($solicitud)) {
-         $tipo = ['', 'Revision de documentos', 'Concepto tecnico planeacion', 'Concepto tecnico transito', 'concepto tecnico salud', 'Viabilidad del permiso', 'Revision documentos finales', 'Liquidacion', 'Acto administrativo'];
+         $tipo = ['', 'Revision de documentos', 'Concepto tecnico planeacion', 'Concepto tecnico transito', 'concepto tecnico salud', 'Viabilidad del permiso', 'Revisión documentos finales', 'Liquidacion', 'Acto administrativo'];
 
          $novedad = new PublicidadNovedad();
          $novedad->NovedadComentario = $req->NovedadComentario;
@@ -157,12 +157,12 @@ class PublicidadAdmin extends Controller
          $novedad->NovedadTipo = $tipo[$req->tiponovedad];
          $novedad->SolicitudId = $solicitud->id;
          $novedad->FuncionarioId = 1;
+
          $solicitud->estado_solicitud = $this->estado($req->tiponovedad, $novedad->NovedadEstado, $solicitud->modalidad);
          $solicitud->dependencia = $this->destino($req->tiponovedad, $novedad->NovedadEstado, $solicitud->modalidad);
          $solicitud->save();
-
          $docs = [$novedad->NovedadTipo];
-         $documentos = PublicidadAdmin::CargarDoc($req, $docs, $solicitud->radicado);
+         $documentos = PublicidadAdmin::CargarDoc($req, $docs, $solicitud->radicado, $req->SolicitudId);
 
          $user = DadepGeneral::GetUser();
          if ($novedad->save()) {
@@ -175,18 +175,18 @@ class PublicidadAdmin extends Controller
 
             PublicidadAdmin::sendMail($per, $solicitud, 'tramites.PublicidadAdmin.CorreoSol', false, reset($documentos));
 
-            $auditoria = Auditoria::create([
-               'usuario' => $user,
-               'proceso_afectado' => 'Radicado-Publicidad-' . $solicitud->radicado,
-               'tramite' => 'PUBLICIDAD EXTERIOR VISUAL',
-               'radicado' => $solicitud->radicado,
-               'accion' => 'update a estado ' . $solicitud->estado_solicitud . ' ' . $novedad->NovedadTipo . ' ' . $novedad->NovedadEstado,
-               'observacion' => $req->NovedadComentario,
-            ]);
+            // $auditoria = Auditoria::create([
+            //    'usuario' => $user,
+            //    'proceso_afectado' => 'Radicado-Publicidad-' . $solicitud->radicado,
+            //    'tramite' => 'PUBLICIDAD EXTERIOR VISUAL',
+            //    'radicado' => $solicitud->radicado,
+            //    'accion' => 'update a estado ' . $solicitud->estado_solicitud . ' ' . $novedad->NovedadTipo . ' ' . $novedad->NovedadEstado,
+            //    'observacion' => $req->NovedadComentario,
+            // ]);
          }
       }
-      echo $novedad->NovedadEstado;
-      echo $solicitud->dependencia;
+      // echo $novedad->NovedadEstado;
+      // echo $solicitud->dependencia;
 
       return redirect('/tramites/interior/publicidad/detalle');
    }
@@ -408,19 +408,21 @@ class PublicidadAdmin extends Controller
       $cargados = true;
       $utimos = [];
       for ($i = 0; $i < $cant; $i++) {
-         $titulo = str_replace(' ', '', $titulos[$i]);
-         $nombre = $radicado . '-' . $titulo . '.pdf';
+         $titulo0 = str_replace(' ', '', $titulos[$i]);
+         $titulo = "documento0";
+         $nombre = $radicado . '-' . $titulo0 . '.pdf';
          $folder = 'documentos_publicidad/' . $radicado;
          $ruta = 'storage/' . $folder . '/' . $nombre;
 
+
          if ($req->$titulo || $req->$titulo != null) {
+
             $g = $req->file($titulo)->storeAs($folder, $nombre);
          } else {
             $g = false;
          }
          if ($g) {
             $docs = PublicidadAdjunto::where('DocNombre', $nombre)->get();
-
             if ($docs->count() > 0) {
                $array = $docs->getDictionary();
                $doc = reset($array);
@@ -451,30 +453,60 @@ class PublicidadAdmin extends Controller
 
    public static function sendMail($persona, $Cs, $vista1 = false, $vista2 = false, $doc = 'NO', $liquidacion = '')
    {
-      $detalleCorreo = [
-         'nombres' => $persona->PersonaNombre,
-         'radicado' => $Cs->request->all()['radicado'],
-         'Subject' => 'Solucitud publicidad exterior visual',
-         'documento' => $doc,
-         'fecha_pendiente' => null,
-         'estado' => null,
-         'mensaje' => null,
-         'Solicitud' => $Cs->request->all(),
-         'liquidacion' => $liquidacion,
-         'NovedadTipo' => $Cs->request->all()['NovedadTipo'],
-      ];
+      if ($Cs instanceof \Illuminate\Http\Request) {
+         $detalleCorreo = [
+            'nombres' => $persona->PersonaNombre,
+            'radicado' => $Cs->request->all()['radicado'],
+            'Subject' => 'Solucitud publicidad exterior visual',
+            'documento' => $doc,
+            'fecha_pendiente' => null,
+            'estado' => null,
+            'mensaje' => null,
+            'Solicitud' => $Cs->request->all(),
+            'liquidacion' => $liquidacion,
+            'NovedadTipo' => $Cs->request->all()['NovedadTipo'],
+         ];
 
-      $detalleCorreo_fun = [
-         'nombres' => ' Funcionario Carlos guerrero',
-         'radicado' => $Cs->request->all()['radicado'],
-         'Subject' => 'Solicitud pendiente para revision de documentos No' . $Cs->request->all()['radicado'],
-         'documento' => 'NO',
-         'fecha_pendiente' => null,
-         'estado' => 'FUNCIONARIO',
-         'mensaje' => null,
-         'Solicitud' => $Cs->request->all(),
-         'liquidacion' => $liquidacion,
-      ];
+         $detalleCorreo_fun = [
+            'nombres' => ' Funcionario Carlos guerrero',
+            'radicado' => $Cs->request->all()['radicado'],
+            'Subject' => 'Solicitud pendiente para revision de documentos No' . $Cs->request->all()['radicado'],
+            'documento' => 'NO',
+            'fecha_pendiente' => null,
+            'estado' => 'FUNCIONARIO',
+            'mensaje' => null,
+            'Solicitud' => $Cs->request->all(),
+            'liquidacion' => $liquidacion,
+         ];
+      } else {
+         $Cs = $Cs->toArray();
+         $detalleCorreo = [
+            'nombres' => $persona->PersonaNombre,
+            'radicado' => $Cs['radicado'],
+            'Subject' => 'Solucitud publicidad exterior visual',
+            'documento' => $doc,
+            'fecha_pendiente' => null,
+            'estado' => null,
+            'mensaje' => null,
+            'Solicitud' => $Cs,
+            'liquidacion' => $liquidacion,
+            'NovedadTipo' => $Cs['NovedadTipo'],
+         ];
+
+         $detalleCorreo_fun = [
+            'nombres' => ' Funcionario Carlos guerrero',
+            'radicado' => $Cs['radicado'],
+            'Subject' => 'Solicitud pendiente para revision de documentos No' . $Cs['radicado'],
+            'documento' => 'NO',
+            'fecha_pendiente' => null,
+            'estado' => 'FUNCIONARIO',
+            'mensaje' => null,
+            'Solicitud' => $Cs,
+            'liquidacion' => $liquidacion,
+         ];
+      }
+
+
       // dd($detalleCorreo);
       $correo_funcionario = 'notificacioneselectronicastributria@bucaramanga.gov.co';
       // envio de correo

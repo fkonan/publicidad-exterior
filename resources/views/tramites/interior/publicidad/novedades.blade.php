@@ -1,3 +1,4 @@
+@if($novedades)
 <tr style="background-color:#004884">
    <td colspan="3" style="background-color:#004884; color:white">Novedades</td>
 </tr>
@@ -8,16 +9,17 @@
 </tr>
 @foreach ($novedades as $novedad)
 <tr>
-   <td>{{ $novedad->created_at }} <br> {{ $novedad->NovedadTipo }}</td>
+   <td>{{ $novedad->NovedadTipo }}</td>
    <td>{{ $novedad->NovedadComentario }}</td>
-   <td>{{ $novedad->NovedadEstado }}</td>
+   <td>{{ $novedad->NovedadEstado}} | {{$novedad->created_at }}</td>
 </tr>
 @endforeach
-
+@endif
 <tr>
    {{-- aqui va el form --}}
    @if ($solicitud->estado_solicitud != 'RECHAZADA' && $solicitud->estado_solicitud != 'APROBADA')
-   <form method="POST" class="form-ciudadano" action="{{ route('interior.publicidad.update') }}" enctype="multipart/form-data" id="myForm1">
+   <form method="POST" class="form-ciudadano" action="{{ route('interior.publicidad.update') }}"
+      enctype="multipart/form-data" id="myForm1">
       <input type="hidden" name="SolicitudId" id="SolicitudId" value="{{ $solicitud->id }}">
       @csrf
       @if ($solicitud->dependencia == 'HACIENDA' && $solicitud->estado_solicitud == 'PENDIENTE')
@@ -27,26 +29,36 @@
    </td>
 </tr>
 @else
-
+@php
+$novedadesCollection = collect($novedades);
+$revisionDocumentos = $novedadesCollection->contains(function ($novedad) {
+return $novedad->NovedadTipo === 'Revision de documentos';
+});
+@endphp
 <tr>
    <td>
       <div class="form-group">
-         <label for="estado">Tipo de novedad*</label>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror" name="tiponovedad" id="tiponovedad" required onchange="javascript:cambiarEstado(this.value);">
+         <label for="estado">Tipo de novedad* </label>
+         <select class="form-control  @error('estado_solicitud') is-invalid @enderror" name="tiponovedad"
+            id="tiponovedad" required onchange="javascript:cambiarEstado(this.value);">
             <option value="">Seleccione</option>
 
             @if ($solicitud->dependencia == 'INTERIOR')
+            @if (!$revisionDocumentos)
             <option value="1">Revision de documentos</option>
+            @endif
             @if ($solicitud->modalidad != 'PASACALLES')
             <option value="5">Presentación de requisitos finales</option>
             @endif
+
             @if ($solicitud->modalidad == 'VALLAS')
-            <option value="6">Revision documentos finales</option>
+            <option value="6">Revisión documentos finales</option>
             @endif
+
             <option value="8">Acto administrativo</option>
             @endif
             @if ($solicitud->dependencia == 'PLANEACION')
-            <option value="2">Concepto tecnico planeacion</option>
+            <option value="2">Concepto tecnico planeación</option>
             @endif
             @if ($solicitud->dependencia == 'TRANSITO')
             <option value="3">Concepto tecnico transito</option>
@@ -66,38 +78,47 @@
       </div>
       <div class="form-group">
          <label for="estado">Estado de la novedad*</label>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado" name="Novedad[0]" id="estado0">
+         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado" name="Novedad[0]"
+            id="estado0">
             <option value="">Seleccione</option>
          </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[1]" id="estado1">
+         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[1]"
+            id="estado1">
             <option value="COMPLETO">COMPLETO</option>
             <option value="INCOMPLETO">INCOMPLETO</option>
             <option value="RECHAZADO">RECHAZADO</option>
          </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[2]" id="estado2">
+         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[2]"
+            id="estado2">
             <option value="FAVORABLE">FAVORABLE</option>
             <option value="NO FAVORABLE">NO FAVORABLE</option>
          </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[3]" id="estado3">
+         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[3]"
+            id="estado3">
             <option value="FAVORABLE">FAVORABLE</option>
             <option value="NO FAVORABLE">NO FAVORABLE</option>
          </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[4]" id="estado4">
+         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[4]"
+            id="estado4">
             <option value="FAVORABLE">FAVORABLE</option>
             <option value="NO FAVORABLE">NO FAVORABLE</option>
          </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[5]" id="estado5">
+         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[5]"
+            id="estado5">
             <option value="VIABLE">VIABLE</option>
             <option value="NO VIABLE">NO VIABLE</option>
          </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[6]" id="estado6">
+         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[6]"
+            id="estado6">
             <option value="COMPLETO">COMPLETO</option>
             <option value="INCOMPLETO">INCOMPLETO</option>
          </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[7]" id="estado7">
+         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[7]"
+            id="estado7">
             <option value="LIQUIDADO">LIQUIDADO</option>
          </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[8]" id="estado8">
+         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[8]"
+            id="estado8">
             <option value="APROBADO">APROBADO</option>
          </select>
 
@@ -120,7 +141,9 @@
    <td colspan="2">
       <div class="form-group">
          <label for="observaciones">Observaciones*</label>
-         <textarea name="NovedadComentario" id="NovedadComentario" onkeypress="return Observaciones(event)" maxlength="500" class="form-control  @error('observaciones_solicitud') is-invalid @enderror" id="observaciones" cols="2" rows="4" required></textarea>
+         <textarea name="NovedadComentario" id="NovedadComentario" onkeypress="return Observaciones(event)"
+            maxlength="500" class="form-control  @error('observaciones_solicitud') is-invalid @enderror"
+            id="observaciones" cols="2" rows="4" required></textarea>
          @error('observaciones_solicitud')
          <span class="invalid-feedback" role="alert">
             <strong class="text-danger">{{ $message }}</strong>
@@ -133,7 +156,8 @@
 @if ($solicitud->dependencia == 'HACIENDA' && $pendiente_pago==false)
 <tr>
    <td colspan="2">
-      <button type="button" id="btnLiquidar" class="btn btn-round btn-middle btn-outline-info" onclick="cargarLiquidacion();">Liquidar</button>
+      <button type="button" id="btnLiquidar" class="btn btn-round btn-middle btn-outline-info"
+         onclick="cargarLiquidacion();">Liquidar</button>
    </td>
 </tr>
 @endif
@@ -141,7 +165,9 @@
    <td>
       <div class="form-group">
          <label for="documento_respuesta">Cargar Respuesta</label>
-         <input type="file" accept="application/pdf" name="documento0" id="documento_respuesta" class="form-control @error('documento0') is-invalid @enderror" @if ($solicitud->dependencia == 'SALUD' || $solicitud->dependencia == 'PLANEACION')
+         <input type="file" accept="application/pdf" name="documento0" id="documento_respuesta"
+            class="form-control @error('documento0') is-invalid @enderror" @if ($solicitud->dependencia == 'SALUD' ||
+         $solicitud->dependencia == 'PLANEACION')
          required @endif>
          @error('documento0')
          <span class="invalid-feedback" role="alert">
@@ -155,7 +181,9 @@
       <div class="form-group">
          <button type="submit" id="myBtnEspacio" class="btn btn-round btn-middle btn-outline-info" id="Boton">Actualizar
             estado</button>
-         <button style="font-size:15px;" class="btn btn-round btn-middle btn_carga d-none" type="button" disabled><span class="spinner-grow spinner-grow-sm text-primary" role="status" aria-hidden="true"></span> Actualizando estado...</button>
+         <button style="font-size:15px;" class="btn btn-round btn-middle btn_carga d-none" type="button" disabled><span
+               class="spinner-grow spinner-grow-sm text-primary" role="status" aria-hidden="true"></span> Actualizando
+            estado...</button>
          <a href="/tramites/interior/publicidad/{{ $solicitud->modalidad }}" class="btn btn-round btn-high">Volver</a>
       </div>
    </td>
@@ -163,7 +191,8 @@
 
 
 @endif
-<div class="modal fade" id="modalLiq" tabindex="-1" role="dialog" aria-labelledby="modalLiqLabel" aria-hidden="true" tabindex="1">
+<div class="modal fade" id="modalLiq" tabindex="-1" role="dialog" aria-labelledby="modalLiqLabel" aria-hidden="true"
+   tabindex="1">
    <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
          <div class="modal-header">
