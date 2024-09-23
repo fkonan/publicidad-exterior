@@ -18,6 +18,7 @@ class Persona extends Model
       "PersonaDoc",
       "PersonaNombre",
       "PersonaApe",
+      "PersonaRazon",
       "PersonaTel",
       "PersonaMail",
       "PersonaDir",

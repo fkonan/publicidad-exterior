@@ -65,17 +65,27 @@ class PublicidadController extends Controller
    public function personasGuardar(Request $request)
    {
       try {
-         $validar = $request->validate([
+         $rules = [
             'PersonaDoc' => 'required',
             'PersonaTip' => 'required',
             'PersonaTipDoc' => 'required',
-            'PersonaNombre' => 'required',
-            'PersonaApe' => 'required',
             'PersonaMail' => 'required|email',
             'PersonaTel' => 'required',
             'dir_solicitante' => 'required',
             'PersonaBarrio' => 'required'
-         ]);
+         ];
+
+         if ($request->PersonaTip == 'Natural') {
+            $rules['PersonaNombre'] = 'required';
+            $rules['PersonaApe'] = 'required';
+         } elseif ($request->PersonaTip == 'JURIDICA') {
+            $rules['PersonaRazon'] = 'required';
+         }
+
+         $validar = $request->validate($rules);
+         if (!$validar) {
+            return response()->json(['success' => false, 'errors' => $validar->errors()]);
+         }
 
          $datos = Persona::updateOrCreate(
             ['PersonaDoc' => $request->PersonaDoc],
