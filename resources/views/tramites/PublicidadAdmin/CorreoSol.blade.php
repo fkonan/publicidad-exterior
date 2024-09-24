@@ -22,9 +22,9 @@
         Notificamos que se ha registrado una novedad, para el proceso publicidad exterior visual,
         radicado con el numero<strong> {{ $Solicitud['radicado'] }}</strong>.<br>
         Tipo de novedad: <strong>{{ $Solicitud['NovedadTipo'] }}</strong><br>
-        Comentarios:<strong>{{ $Solicitud['Comentario'] }}</strong><br>
         Estado: <strong>{{ $Solicitud['NovedadEstado'] }}</strong>
-        Consulte su solicitud aquí: <a href="https://tramitesenlineapruebas.bucaramanga.gov.co/publicidad-exterior" target="_blank">Consulta publicidad exterior</a>
+        Comentarios:<strong>{{ $Solicitud['Comentario'] }}</strong><br>
+        Consulte su solicitud aquí: <a href="https://tramitesenlinea.bucaramanga.gov.co/publicidad-exterior" target="_blank">Consulta publicidad exterior</a>
     </p>
     @if($Solicitud['liquidacion']!='')
     <h3>Se ha generado el siguiente enlace para que pueda generar el recibo de pago o realizar el pago en línea:

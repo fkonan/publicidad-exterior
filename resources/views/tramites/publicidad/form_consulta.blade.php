@@ -29,7 +29,7 @@
 								<input type="text" name="parametro" id="parametro" class="form-control input-md"
 									title="Seleccione la opción para validar el documento" required="required"
 									onkeypress="" onkeyup="aMayusculas(this.value,this.id)"
-									maxlength="10" minlength="8">
+									maxlength="20" minlength="8">
 							</div>
 						</div>
 					</div>
@@ -41,4 +41,4 @@
 			</form>
 		</div>
 	</div>
-</div> 
+</div>

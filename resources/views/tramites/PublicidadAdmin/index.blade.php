@@ -24,7 +24,7 @@
                         <li class="breadcrumb-item ">
                             <div class="image-icon">
                                 <span class="breadcrumb govco-icon govco-icon-shortr-arrow" style="height: 22px;"></span>
-                                <a style="color: #004fbf;" class="breadcrumb-text" href="#">Tramites en Linea</a>
+                                <a style="color: #004fbf;" class="breadcrumb-text" href="#">Trámites en Línea</a>
                             </div>
                         </li>
                         <li class="breadcrumb-item ">

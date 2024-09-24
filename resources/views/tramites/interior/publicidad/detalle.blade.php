@@ -12,7 +12,7 @@
                <li class="breadcrumb-item ">
                   <div class="image-icon">
                      <span class="breadcrumb govco-icon govco-icon-shortr-arrow" style="height: 22px;"></span>
-                     <a style="color: #004fbf;" class="breadcrumb-text" href="#">Tramites en Linea</a>
+                     <a style="color: #004fbf;" class="breadcrumb-text" href="#">Trámites en Línea</a>
                   </div>
                </li>
                <li class="breadcrumb-item ">
@@ -56,21 +56,27 @@
                      </td>
                      <td>
                         <strong>Tipo doc. del solicitante:</strong><br>
-                        {{ $solicitud->tipo_documento }}
+                        {{ $persona->PersonaTipDoc }}
                      </td>
                      <td><strong>Número de documento:</strong><br>
-                        {{ $solicitud->numero_documento }}
+                        {{ $persona->PersonaDoc }}
                      </td>
                   </tr>
                   <tr>
-                     <td><strong>Nombre del solicitante:</strong><br>
-                        {{ $solicitud->nombre_responsable }} {{ $solicitud->apellido_responsable }}
+                     @if($persona->PersonaTipo == 'Juridica')
+                     <td><strong>Razón social:</strong><br>
+                        {{ $persona->PersonaRazon }}
                      </td>
+                     @else
+                     <td><strong>Nombre del solicitante:</strong><br>
+                        {{ $persona->PersonaNombre }} {{ $persona->PersonaApe }}
+                     </td>
+                     @endif
                      <td><strong>Teléfono/celular:</strong><br>
-                        {{ $solicitud->telefono_responsable }}
+                        {{ $persona->PersonaTel }}
                      </td>
                      <td><strong>Correo eletrónico:</strong><br>
-                        {{ $solicitud->email_responsable }}
+                        {{ $persona->PersonaMail }}
                      </td>
                   </tr>
                   <tr>

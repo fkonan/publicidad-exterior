@@ -78,7 +78,7 @@ class PublicidadController extends Controller
          if ($request->PersonaTip == 'Natural') {
             $rules['PersonaNombre'] = 'required';
             $rules['PersonaApe'] = 'required';
-         } elseif ($request->PersonaTip == 'JURIDICA') {
+         } elseif ($request->PersonaTip == 'Juridica') {
             $rules['PersonaRazon'] = 'required';
          }
 
@@ -138,20 +138,11 @@ class PublicidadController extends Controller
       //Creando o actualizando solicitud-------------------
       $publicidad = new Publicidad();
       $publicidad->PersonaId = $personas->PersonaId;
-      $publicidad->apellido_responsable = $request->apellido_responsable;
-      $publicidad->tipo_documento = $request->tipo_documento;
-      $publicidad->numero_documento = $personas->PersonaDoc;
       $publicidad->modalidad = $modalidades[$request->modalidad];
-      $publicidad->nombre_responsable = $personas->PersonaNombre;
-      $publicidad->apellido_responsable =  $personas->PersonaApe;
-      $publicidad->tipo_documento =  $personas->PersonaTipDoc;
-      $publicidad->email_responsable =  $personas->PersonaMail;
-      $publicidad->telefono_responsable =  $personas->PersonaTel;
       $publicidad->tipo_publicidad =  $request->tipo_publicidad;
       $publicidad->numero_elementos =  $request->numero_elementos;
       $publicidad->observacion_solicitud =  $request->observacion_medidas;
-      $publicidad->tipo_publicidad =  $request->tipo_publicidad;
-      $publicidad->tipo_publicidad =  $request->tipo_publicidad;
+      $publicidad->tratamiento_datos =  $request->tratamiento_datos;
       $publicidad->acepto_terminos = $request->acepto_terminos;
       $publicidad->confirmo_mayorEdad = $request->confirmo_mayorEdad;
       $publicidad->compartir_informacion = $request->compartir_informacion;
@@ -160,19 +151,19 @@ class PublicidadController extends Controller
 
       //Creando radicado
       $y = date("Y");
+      $m = date("m");
       $sql = "select count(id) as Cantidad from publicidad_exterior Where ( YEAR(created_at)=$y)";
       $obj = DB::select($sql);
       $id = $obj[0]->Cantidad + 1;
       $id = 10000000 + $id;
       $id = "$id";
 
-      $publicidad->radicado = $y . "-" . substr($id, -3);
+      $publicidad->radicado = $y . "-" . $m . "-" . substr($id, -3);
       $publicidad->save();
 
       $request->request->add([
          'radicado' => $publicidad->radicado,
          'NovedadTipo' => ""
-
       ]);
 
       if ($publicidad->id > 0) {
@@ -193,8 +184,6 @@ class PublicidadController extends Controller
       }
 
       PublicidadAdmin::CargarDoc($request, $docs, $publicidad->radicado, $publicidad->id);
-
-      // DadepGeneral::sendMail($Datos, $Cs, 'tramites.Dadep.CorreoSol', 'tramites.Dadep.CorreoFun');
       PublicidadAdmin::sendMail($personas, $request, 'tramites.PublicidadAdmin.CorreoSol', false);
 
       return view('tramites.publicidad.ResSol', compact('request'));
@@ -240,7 +229,7 @@ class PublicidadController extends Controller
    public function DocPendientes(Request $request)
    {
 
-      $Qs = Publicidad::where("radicado", $request->Radicado)->where("numero_documento", $request->identificacion)->get();
+      $Qs = Publicidad::where("radicado", $request->Radicado)->get();
       if ($Qs->count() > 0) {
          $array = $Qs->getDictionary();
          $Solicitud = reset($array);
@@ -260,9 +249,8 @@ class PublicidadController extends Controller
 
    public function Guardar(Request $req)
    {
-
       $Qs = Publicidad::where("radicado", $req->Radicado)->get();
-
+      dd($Qs);
       if ($Qs->count() > 0) {
          $array = $Qs->getDictionary();
          $Solicitud = reset($array);

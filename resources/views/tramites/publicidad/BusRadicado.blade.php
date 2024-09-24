@@ -12,15 +12,15 @@
 
 <div class="container mt-3 mb-4 m-xs-x-3" id="body_eventos">
     @include('tramites.titulo')
-    
+
      <div class="container-fluid">
 		<div class="row mt-2">
 			<div class="col-md-8 col-lg-8 col-sm-12 col-xs-12">
                 @include('tramites.publicidad.Introduccion')
 
-				<form action="/publicidad-exterior/DocPendientes" method="GET" id="myForm" enctype="multipart/form-data"  class="form-ciudadano">
+				<form action="/publicidad-exterior/DocPendientes" method="GET" id="frm" enctype="multipart/form-data"  class="form-ciudadano">
 					@csrf
-				   
+
 							<!-- datos Generales-->
 					<h3 class="headline-l-govco mt-3 pl-0">Actualizaciones</h3>
 
@@ -46,7 +46,7 @@
 									maxlength="40" minlength="5">
 							</div>
 						</div>
-						
+
 						<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12"><br>
 							<div class="form-group">
 								<label style="color:#111111;" class="input" for="DD01"
@@ -54,14 +54,14 @@
 								<input type="text" name="Radicado" id="Radicado" class="form-control input-md"
 									title="Seleccione la opción para validar el documento" required="required"
 									onkeypress="" onkeyup="aMayusculas(this.value,this.id)"
-									maxlength="10" minlength="8">
+									maxlength="20" minlength="8">
 							</div>
 						</div>
 
 						<div class="col-md-12  pl-1 pr-1 pt-3 text-left mt-4" style="padding-left: 0px!important">
 
 							<button style="font-size:15px;" type="submit" class="btn btn-round btn-middle btn_enviar_solicitud" >Actualizar</button>
-							
+
 							<button style="font-size:15px;" class="btn btn-round btn-middle btn_carga d-none" type="button" disabled><span class="spinner-grow spinner-grow-sm text-primary" role="status" aria-hidden="true"></span> Enviando...</button>
 						</div>
 					</div>
@@ -72,7 +72,7 @@
 			</div>
 		</div>
 	</div>
-</div> 
+</div>
 @include('tramites.publicidad.form_consulta')
 
 @endsection

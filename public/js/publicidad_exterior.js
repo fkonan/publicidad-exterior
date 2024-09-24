@@ -31,15 +31,16 @@ doc.addEventListener('DOMContentLoaded', function () {
 
             success: function (response) {
                if (response.success) {
-                  doc.getElementById('PersonaNombre').value = response.persona.PersonaNombre;
-                  doc.getElementById('PersonaApe').value = response.persona.PersonaApe;
-                  doc.getElementById('PersonaRazon').value = response.persona.PersonaRazon;
                   doc.getElementById('dir_solicitante').value = response.persona.PersonaDir;
                   doc.getElementById('PersonaTel').value = response.persona.PersonaTel;
                   doc.getElementById('PersonaMail').value = response.persona.PersonaMail;
                   doc.getElementById('PersonaBarrio').value = response.persona.PersonaBarrio;
                   $("#PersonaBarrio").trigger('change.select2');
                   doc.getElementById('PersonaTip').value = response.persona.PersonaTip;
+                  validarTipoPersona(response.persona.PersonaTip);
+                  doc.getElementById('PersonaNombre').value = response.persona.PersonaNombre;
+                  doc.getElementById('PersonaApe').value = response.persona.PersonaApe;
+                  doc.getElementById('PersonaRazon').value = response.persona.PersonaRazon;
 
                   doc.getElementById('divInfo').classList.remove('d-none');
                   $('#loadMe').modal('hide');
@@ -61,19 +62,7 @@ doc.addEventListener('DOMContentLoaded', function () {
 
    doc.addEventListener('change', (e) => {
       if (e.target.matches('#PersonaTip')) {
-         if (e.target.value == 'Juridica') {
-            doc.getElementById('natural_nombre').classList.add('d-none');
-            doc.getElementById('natural_ape').classList.add('d-none');
-            doc.getElementById('juridica').classList.remove('d-none');
-         }
-         if (e.target.value == 'Natural') {
-            doc.getElementById('natural_nombre').classList.remove('d-none');
-            doc.getElementById('natural_ape').classList.remove('d-none');
-            doc.getElementById('juridica').classList.add('d-none');
-         }
-         doc.getElementById('PersonaNombre').value = '';
-         doc.getElementById('PersonaApe').value = '';
-         doc.getElementById('PersonaRazon').value = '';
+         validarTipoPersona(e.target.value);
       }
 
       if (e.target.matches('#ancho_publicidad') || e.target.matches('#alto_publicidad') || e.target.matches('#numero_caras')) {
@@ -85,13 +74,13 @@ doc.addEventListener('DOMContentLoaded', function () {
       }
 
       if (e.target.matches('#tipo_publicidad')) {
-         if (e.target.value == 'RENOVACION'){
+         if (e.target.value == 'RENOVACION') {
             doc.getElementById('divRenovacion').classList.remove('d-none');
             doc.getElementById('fecha_vencimiento').value = '';
             doc.getElementById('fecha_renovacion').value = '';
             doc.getElementById('fecha_vencimiento').required = true;
             doc.getElementById('fecha_renovacion').required = true;
-         }else{
+         } else {
             doc.getElementById('divRenovacion').classList.add('d-none');
             doc.getElementById('fecha_vencimiento').value = '';
             doc.getElementById('fecha_renovacion').value = '';
@@ -103,7 +92,6 @@ doc.addEventListener('DOMContentLoaded', function () {
 
 
    let frmPersona = doc.getElementById('myForm');
-
    frmPersona.addEventListener('submit', (e) => {
       e.preventDefault();
       let formData = new FormData(frmPersona);
@@ -266,7 +254,21 @@ function cargarAdjuntos(modalidad) {
    })
 }
 
-
+function validarTipoPersona(value) {
+   if (value == 'Juridica') {
+      doc.getElementById('natural_nombre').classList.add('d-none');
+      doc.getElementById('natural_ape').classList.add('d-none');
+      doc.getElementById('juridica').classList.remove('d-none');
+   }
+   if (value == 'Natural') {
+      doc.getElementById('natural_nombre').classList.remove('d-none');
+      doc.getElementById('natural_ape').classList.remove('d-none');
+      doc.getElementById('juridica').classList.add('d-none');
+   }
+   doc.getElementById('PersonaNombre').value = '';
+   doc.getElementById('PersonaApe').value = '';
+   doc.getElementById('PersonaRazon').value = '';
+}
 
 
 

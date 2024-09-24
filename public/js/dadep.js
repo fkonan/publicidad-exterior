@@ -1,11 +1,11 @@
 //funciones agregadas
  var campoDir = "";
 function direccion() {
-        var direccion = $("#DD000").val();        
+        var direccion = $("#DD000").val();
        $("#ModalDireccionesEventos").modal("hide");
        $(campo).val("");
        $(campo).val(direccion);
-       
+
 }
 
 
@@ -29,13 +29,13 @@ function direccion() {
 
 
 
-    
-    
+
+
 /*============================================================================
     =            input de  Matricula  minlength = 9
                  id = "PredioMatricula"               maxlength =12
     ============================================================================*/
-    
+
   $("#PredioMatricula").change(function () {
         var input8 = document.getElementById("PredioMatricula").value;
         var ValInput8 = input8.match(/^[0-9/-]{9,12}$/);
@@ -47,14 +47,14 @@ function direccion() {
             $("#PredioMatricula").val("");
         }
     });
-    
-    
-        
+
+
+
 /*============================================================================
     =            input de  Area total  minlength = 2
                  id = "AreaTotal"               maxlength =5
     ============================================================================*/
-    
+
   $("#AreaTotal").change(function () {
         var input8 = document.getElementById("AreaTotal").value;
         var ValInput8 = input8.match(/^[0-9/]{2,6}$/);
@@ -66,12 +66,12 @@ function direccion() {
             $("#AreaTotal").val("");
         }
     });
-    
+
     /*============================================================================
     =            input de  Area Cesion  minlength = 2
                  id = "PredioMatricula"         maxlength =6
     ============================================================================*/
-    
+
   $("#AreaCesion").change(function () {
         var input8 = document.getElementById("AreaCesion").value;
         var ValInput8 = input8.match(/^[0-9/]{2,6}$/);
@@ -83,13 +83,13 @@ function direccion() {
             $("#AreaCesion").val("");
         }
     });
-    
-    
+
+
     /*============================================================================
     =            input de  Escritura Pública    minlength = 4
                  id = "PredioMatricula"               maxlength =4
     ============================================================================*/
-    
+
   $("#PredioEscritura").change(function () {
         var input8 = document.getElementById("PredioEscritura").value;
         var ValInput8 = input8.match(/^[0-9/]{4}$/);
@@ -101,13 +101,13 @@ function direccion() {
             $("#PredioEscritura").val("");
         }
     });
-    
-    
+
+
      /*============================================================================
     =            input de  Ciudad    minlength = 4
                  id = "PredioMatricula"               maxlength =4
     ============================================================================*/
-    
+
   $("#Ciudad").change(function () {
         var input8 = document.getElementById("Ciudad").value;
         var ValInput8 = input8.match(/^[a-zA-Z/]{4,20}$/);
@@ -119,8 +119,8 @@ function direccion() {
             $("#Ciudad").val("");
         }
     });
-    
-    
+
+
     /*============================================================================
     =            input de radicado  minlength = 8
                  id = "Radicado"               maxlength =10
@@ -128,15 +128,15 @@ function direccion() {
 
     $("#Radicado").change(function () {
         var input8 = document.getElementById("Radicado").value;
-        var ValInput8 = input8.match(/^[0-9/-]{8,10}$/);
+        var ValInput8 = input8.match(/^[0-9/-]{8,20}$/);
         if (ValInput8 == null) {
             alert(
-                "No se permiten letras, menos de ocho(8) digitos ni más de diez(10) digitos, Solo se permite los caracteres especiales (-)"
+                "No se permiten letras, menos de ocho(8) digitos ni más de veinte(20) digitos, Solo se permite los caracteres especiales (-)"
             );
             $("#Radicado").focus();
             $("#Radicado").val("");
         }
     });
-    
-    
+
+
 

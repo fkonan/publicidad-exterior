@@ -62,13 +62,11 @@ class PublicidadAdmin extends Controller
          $i++;
       }
       $sGrupos[0]->activo = 'active';
-
       $porCerrar = DB::select(Publicidad::SqlXCerrar());
       $PORCERRAR = 0;
       if (!empty($porCerrar)) {
          $PORCERRAR = $porCerrar[0]->Cantidad;
       }
-
       return view('tramites.interior.publicidad.index1', compact('sGrupos', 'PORCERRAR', 'tipo'));
    }
 
@@ -109,6 +107,8 @@ class PublicidadAdmin extends Controller
    public function detalle(Request $req, $id)
    {
       $solicitud = Publicidad::findOrFail($id);
+      $persona = Persona::Find($solicitud->PersonaId);
+
       $documento = PublicidadAdjunto::where('Radicado', $solicitud->radicado)->get();
       $documentos = [];
       if ($documento->count() > 0) {
@@ -142,14 +142,14 @@ class PublicidadAdmin extends Controller
          }
       }
 
-      return view($vista, compact('solicitud', 'detalle', 'adjunto', 'novedades', 'documentos', 'pendiente_pago', 'fecha_limite'));
+      return view($vista, compact('persona', 'solicitud', 'detalle', 'adjunto', 'novedades', 'documentos', 'pendiente_pago', 'fecha_limite'));
    }
 
    public function AgregarNovedad(Request $req)
    {
       $solicitud = Publicidad::Find($req->SolicitudId);
       if (!empty($solicitud)) {
-         $tipo = ['', 'Revision de documentos', 'Concepto tecnico planeacion', 'Concepto tecnico transito', 'concepto tecnico salud', 'Viabilidad del permiso', 'Revisión documentos finales', 'Liquidacion', 'Acto administrativo'];
+         $tipo = ['', 'Revision de documentos', 'Concepto tecnico planeacion', 'Concepto tecnico transito', 'concepto tecnico salud', 'Viabilidad del permiso', 'Presentación de requisitos finales', 'Revisión de requisitos finales', 'Liquidacion', 'Acto administrativo'];
 
          $novedad = new PublicidadNovedad();
          $novedad->NovedadComentario = $req->NovedadComentario;
@@ -160,11 +160,14 @@ class PublicidadAdmin extends Controller
 
          $solicitud->estado_solicitud = $this->estado($req->tiponovedad, $novedad->NovedadEstado, $solicitud->modalidad);
          $solicitud->dependencia = $this->destino($req->tiponovedad, $novedad->NovedadEstado, $solicitud->modalidad);
+
          $solicitud->save();
+
          $docs = [$novedad->NovedadTipo];
          $documentos = PublicidadAdmin::CargarDoc($req, $docs, $solicitud->radicado, $req->SolicitudId);
 
          $user = DadepGeneral::GetUser();
+
          if ($novedad->save()) {
             $per = Persona::Find($solicitud->PersonaId);
 
@@ -408,18 +411,20 @@ class PublicidadAdmin extends Controller
       $cargados = true;
       $utimos = [];
       for ($i = 0; $i < $cant; $i++) {
-         $titulo0 = str_replace(' ', '', $titulos[$i]);
-         $titulo = "documento0";
-         $nombre = $radicado . '-' . $titulo0 . '.pdf';
+         $titulo = str_replace(' ', '', $titulos[$i]);
+         $nombre = $radicado . '-' . $titulo . '.pdf';
          $folder = 'documentos_publicidad/' . $radicado;
          $ruta = 'storage/' . $folder . '/' . $nombre;
 
-
          if ($req->$titulo || $req->$titulo != null) {
-
             $g = $req->file($titulo)->storeAs($folder, $nombre);
          } else {
-            $g = false;
+            if ($req->documento0 || $req->documento0 != null) {
+
+               $g = $req->file('documento0')->storeAs($folder, $nombre);
+            } else {
+               $g = false;
+            }
          }
          if ($g) {
             $docs = PublicidadAdjunto::where('DocNombre', $nombre)->get();
@@ -454,6 +459,7 @@ class PublicidadAdmin extends Controller
    public static function sendMail($persona, $Cs, $vista1 = false, $vista2 = false, $doc = 'NO', $liquidacion = '')
    {
       if ($Cs instanceof \Illuminate\Http\Request) {
+         dd('1', $Cs);
          $detalleCorreo = [
             'nombres' => $persona->PersonaNombre,
             'radicado' => $Cs->request->all()['radicado'],
@@ -468,7 +474,7 @@ class PublicidadAdmin extends Controller
          ];
 
          $detalleCorreo_fun = [
-            'nombres' => ' Funcionario Carlos guerrero',
+            'nombres' => 'Funcionario Carlos guerrero',
             'radicado' => $Cs->request->all()['radicado'],
             'Subject' => 'Solicitud pendiente para revision de documentos No' . $Cs->request->all()['radicado'],
             'documento' => 'NO',
@@ -480,6 +486,7 @@ class PublicidadAdmin extends Controller
          ];
       } else {
          $Cs = $Cs->toArray();
+         //dd('2', $Cs);
          $detalleCorreo = [
             'nombres' => $persona->PersonaNombre,
             'radicado' => $Cs['radicado'],
@@ -494,7 +501,7 @@ class PublicidadAdmin extends Controller
          ];
 
          $detalleCorreo_fun = [
-            'nombres' => ' Funcionario Carlos guerrero',
+            'nombres' => 'Funcionario Carlos guerrero',
             'radicado' => $Cs['radicado'],
             'Subject' => 'Solicitud pendiente para revision de documentos No' . $Cs['radicado'],
             'documento' => 'NO',
@@ -506,20 +513,27 @@ class PublicidadAdmin extends Controller
          ];
       }
 
+      $correo_funcionario = ['fstarblack@gmail.com'];
 
-      // dd($detalleCorreo);
-      $correo_funcionario = 'notificacioneselectronicastributria@bucaramanga.gov.co';
+      if ($Cs['dependencia'] == 'PLANEACION') {
+         $correo_funcionario[] = 'fstarblack@gmail.com';
+      }
+
+      if ($Cs['dependencia'] == 'SALUD') {
+         $correo_funcionario[] = 'fstarblack@gmail.com';
+      }
+
       // envio de correo
       if ($vista1 != false) {
-
          Mail::to($persona->PersonaMail)
-            ->bcc($correo_funcionario)
             ->queue(new MailNotificacion($detalleCorreo, $vista1));
+
+         Mail::to($correo_funcionario)
+            ->queue(new MailNotificacion($detalleCorreo, 'tramites.PublicidadAdmin.CorreoFun'));
       }
       if ($vista2 != false) {
+         dd('solo fuincionario');
          Mail::to($correo_funcionario)->queue(new MailNotificacion($detalleCorreo, $vista1));
-
-         // Mail::to($correo_funcionario)->queue(new MailNotificacion($detalleCorreo_fun, $vista2));
       }
    }
 }
