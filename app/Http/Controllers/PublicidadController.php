@@ -250,7 +250,6 @@ class PublicidadController extends Controller
    public function Guardar(Request $req)
    {
       $Qs = Publicidad::where("radicado", $req->Radicado)->get();
-      dd($Qs);
       if ($Qs->count() > 0) {
          $array = $Qs->getDictionary();
          $Solicitud = reset($array);
