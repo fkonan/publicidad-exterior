@@ -1,20 +1,9 @@
 @extends('layouts.menu')
 
 @section('dashboard')
-<style>
-   th.sorting_desc::after,
-   th.sorting_asc::after {
-      right: 0 !important;
-      content: "" !important;
-   }
-</style>
 
-<?php $tramite= 'LICENCIA DE INTERVENCION DE ESPACIO PUBLICO PARA LOCALIZACION DE EQUIPAMIENTO';?>
-
-
-<div class="container mt-3 mb-4 m-xs-x-3">
-
-   <div class="row pl-4">
+<div class="container">
+   <div class="row mb-4">
       <div class="px-0 col-md-9">
          <nav aria-label="Miga de pan" style="max-height: 20px;">
             <ol class="breadcrumb" style="background-color: #FFFFFF;">
@@ -45,87 +34,54 @@
          </nav>
       </div>
    </div>
-   <div class="col-md-12 pt-4" style="padding-left: 10px!important">
-      <div class="row pt-5">
 
-         <!-- cerrar pendiente-->
-         <div class="col-md-4 pb-4">
-            <button type="button" class="btn btn-danger btn-block btn-sm" style="background-color:#A80521!important;">
-               <span class="govco-icon govco-icon-exclamation-cn size-1x text-white"></span> &nbsp; Solicitudes
-               pendientes por cerrarse automaticamente <span class="badge badge-light">{{$PORCERRAR}}</span>
-            </button>
-         </div>
-         <!-- Fin de cerrar-->
-
-         <div class="tabs-govco col-md-12 animate__animated animate__bounceInRight">
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-               @foreach ($sGrupos as $sEnviadas)
-               <li class="nav-item">
-                  <a class="nav-link {{$sEnviadas->activo}}" id="{{$sEnviadas->titulo}}-tab" data-toggle="tab"
-                     href="#{{$sEnviadas->titulo}}" role="tab"
-                     aria-controls="{{$sEnviadas->titulo}}">{{$sEnviadas->nombre}}
-                     <span class="badge badge-primary">{{$sEnviadas->cantidad}}</span>
-                  </a>
-               </li>
-
-               @endforeach
-            </ul>
-
-            <div class="tab-content">
-               @foreach ($sGrupos as $sEnviadas)
-               <div class="tab-pane px-0 {{$sEnviadas->activo}}" id="{{$sEnviadas->titulo}}" role="tabpanel"
-                  aria-labelledby="{{$sEnviadas->titulo}}-tab">
-                  {{-- TABLA DE ENVIADOS --}}
-                  <div class="col-md-12">
-                     <div id="container_table" class="table-pagination-govco">
-                        <table id="DataTables_Table_0"
-                           class="table display table-responsive-md table-responsive-md tablas" width="100%"
-                           style="text-align: left!important;">
-                           <thead>
-                              <tr>
-                                 <th style="color: #004884;">Radicado</th>
-                                 <th style="color: #004884;;">Modalidad</th>
-                                 <th style="color: #004884;">Nombre Solicitante</th>
-                                 <th style="color: #004884;">Identificación Solicitante</th>
-                                 <th style="color: #004884;;">Teléfono Solicitante</th>
-                                 <th style="color: #004884;;">Correo Solicitante</th>
-
-                              </tr>
-                           </thead>
-                           <tbody>
-                              @foreach ($sEnviadas->datos as $solicitudesE)
-                              <tr>
-                                 <td>{{ $solicitudesE->radicado }}</td>
-                                 <td>{{ $solicitudesE->modalidad }}</td>
-                                 @if($solicitudesE->PersonaTip=='Juridica')
-                                 <td>{{ $solicitudesE->PersonaRazon }}</td>
-                                 @else
-                                 <td>{{ $solicitudesE->PersonaNombre }} {{$solicitudesE->PersonaApe}}</td>
-                                 @endif
-                                 <td>{{ $solicitudesE->PersonaTipDoc }} {{ $solicitudesE->PersonaDoc }}</td>
-                                 <td>{{ $solicitudesE->PersonaTel }}</td>
-                                 <td>{{ $solicitudesE->PersonaMail }}</td>
-
-
-                                 <td>
-                                    <div class="btn-group" role="group">
-                                       <a type="button" class="btn-symbolic-govco align-column-govco"
-                                          href="{{route('interior.publicidad.detalle', $solicitudesE->id)}}">
-                                          <span class="govco-icon govco-icon-attached-n"></span>
-                                          <span class="btn-govco-text">Detalles</span></a>
-                                    </div>
-                                 </td>
-                              </tr>
-                              @endforeach
-                           </tbody>
-                        </table>
-                     </div>
-                  </div>
-                  {{-- </ TABLA DE ENVIADOS FIN --}} </div>
+   <div class="row">
+      <h2>Listado de solicitudes radicadas</h2>
+   </div>
+   <div class="row">
+      <div class="col-md-12">
+         <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm" id="table">
+               <thead>
+                  <tr>
+                     <th>Radicado</th>
+                     <th>Tipo de persona</th>
+                     <th>Documento solictante</th>
+                     <th>Solicitante</th>
+                     <th>Tipo de publicidad</th>
+                     <th>Fecha de vencimiento</th>
+                     <th>Estado de la solicitud</th>
+                     <th>Novedad</th>
+                     <th>Acciones</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  @foreach($solicitudes as $solicitud)
+                  <tr>
+                     <td>{{ $solicitud->radicado }}</td>
+                     <td>{{ $solicitud->PersonaTip }}</td>
+                     <td>{{ $solicitud->PersonaDoc }}</td>
+                     <td>{{ $solicitud->PersonaTip=='Natural'?$solicitud->PersonaNombre . " " .$solicitud->PersonaApe:$solicitud->PersonaRazon }}</td>
+                     <td>{{ $solicitud->tipo_publicidad }}</td>
+                     <td>{{ $solicitud->fecha_vencimiento }}</td>
+                     <td>{{ $solicitud->estado_solicitud }}</td>
+                     <td>{{ $solicitud->novedad }}</td>
+                     <td>
+                        <a href="{{ route('interior.publicidad.detalle', $solicitud->id) }}" class="btn btn-primary">Ver</a>
+                     </td>
+                  </tr>
                   @endforeach
-               </div>
-            </div>
+               </tbody>
+            </table>
          </div>
       </div>
    </div>
-   @endsection
+</div>
+@endsection
+@push('custom-scripts')
+<script>
+   $('#table').bootstrapTable({});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.js"></script>
+@endpush

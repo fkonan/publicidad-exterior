@@ -13,9 +13,9 @@ function NumDoc(e){
           if(key == especiales[i]){
             tecla_especial = true;
           break;
-            } 
+            }
         }
-                       
+
       if(letras.indexOf(tecla)==-1 && !tecla_especial)
         return false;
 }
@@ -35,9 +35,9 @@ function Letras(n){
           if(key == especiales[i]){
             tecla_especial = true;
           break;
-            } 
+            }
         }
-                       
+
       if(numeros.indexOf(tecla)==-1 && !tecla_especial)
         return false;
 }
@@ -56,9 +56,9 @@ function Observaciones(n){
           if(key == especiales[i]){
             tecla_especial = true;
           break;
-            } 
+            }
         }
-                       
+
       if(numeros.indexOf(tecla)==-1 && !tecla_especial)
         return false;
 }
@@ -83,9 +83,9 @@ function Numeros(e){
             if(key == especiales[i]){
               tecla_especial = true;
             break;
-              } 
+              }
           }
-                         
+
         if(letras.indexOf(tecla)==-1 && !tecla_especial)
           return false;
 }
@@ -101,9 +101,9 @@ function IP(e){
             if(key == especiales[i]){
               tecla_especial = true;
             break;
-              } 
+              }
           }
-                         
+
         if(letras.indexOf(tecla)==-1 && !tecla_especial)
           return false;
 }
@@ -123,9 +123,9 @@ function Email(em){
             if(key == especiales[i]){
               tecla_especial = true;
             break;
-              } 
+              }
           }
-                         
+
         if(numeros.indexOf(tecla)==-1 && !tecla_especial)
           return false;
 }
@@ -144,9 +144,9 @@ function Direccion(n){
           if(key == especiales[i]){
             tecla_especial = true;
           break;
-            } 
+            }
         }
-                       
+
       if(numeros.indexOf(tecla)==-1 && !tecla_especial)
         return false;
 }
@@ -159,10 +159,10 @@ function Direccion(n){
     var yyyy = today.getFullYear();
      if(dd<10){
             dd='0'+dd
-        } 
+        }
         if(mm<10){
             mm='0'+mm
-        } 
+        }
 
     // today = yyyy+'-'+mm+'-'+dd;
     // document.getElementById("fecha_matricula").setAttribute("max", today);
@@ -177,40 +177,40 @@ function Direccion(n){
       let tipo_boleteria = document.getElementById('tipo_boleteria').value;
       let valor_boleteria = document.getElementById('valor_boleteria').value;
       let cantidad_boleteria = document.getElementById('cantidad_boleteria').value;
-      let table = document.getElementById("tablaBoleteria"); 
+      let table = document.getElementById("tablaBoleteria");
       var tbodyRowCount = table.tBodies[0].rows.length;
       var id_table = 1 +tbodyRowCount;
-      
-      
-    
-      
-      
+
+
+
+
+
       let valor_boletas = new Intl.NumberFormat("es-CO").format(valor_boleteria);
-    
-      if (tipo_boleteria.length == 0) {    
+
+      if (tipo_boleteria.length == 0) {
        Swal.fire('Debes completar el campo tipo de boleteria')
          return;
       }
-    
+
       if (valor_boleteria.length == 0) {
         Swal.fire('Debes completar el campo valor de boleteria')
         return;
       }
-    
+
       if (cantidad_boleteria.length == 0) {
         Swal.fire('Debes completar el campo Numero de boleteria')
         return;
       }
-    
+
       if(valor_boleteria.startsWith("0")){
         valor_boleteria = "0";
      }
      if(cantidad_boleteria.startsWith("0")){
       cantidad_boleteria = "0";
     }
-    
-      
-    
+
+
+
       document.getElementById("tablaBoleteria").getElementsByTagName('tbody')[0].insertRow(-1).innerHTML =
          `<tr id="boleta_${id_table}">
             <td data-tb="${tipo_boleteria}" id="boleta_${id_table}">
@@ -218,10 +218,10 @@ function Direccion(n){
             </td>
             <td data-vb="${valor_boleteria}">
                $${valor_boletas}
-            </td>   
+            </td>
             <td data-cantidad="${cantidad_boleteria}">
             ${cantidad_boleteria}
-            </td>        
+            </td>
             <td>
                <div class="row">
                   <div class="col">
@@ -240,17 +240,17 @@ function Direccion(n){
       $("#tipo_boleteria").val('');
       $("#valor_boleteria").val('');
       $("#cantidad_boleteria").val('');
-    
+
       // let total_oculto = Number(total) + Number(subtotal);
       // let suma_total = new Intl.NumberFormat("es-CO").format(total_oculto);
       // $('#total').val(suma_total);
       // $('#total_oculto').val(total_oculto);
       $('#ModalBoleteria').modal('hide');
-     
+
     }
-    
-    function eliminarFila(fila) {  
-    
+
+    function eliminarFila(fila) {
+
       Swal.fire({
         title: 'ESTAS SEGURO DE ELIMINAR ESTE REGISTRO?',
         text: "Este cambio es irreversible",
@@ -262,44 +262,44 @@ function Direccion(n){
       }).then((result) => {
         if (result.isConfirmed) {
           fila.closest("tr").remove();
-          return;  
-         
+          return;
+
         }
       })
-      
-      
-    
+
+
+
     }
-    
-    function editarFila(tipo,valor,cantidad,id_fila) {  
-      
+
+    function editarFila(tipo,valor,cantidad,id_fila) {
+
       $('#ModalBoleteria').modal('show');
       $('#btnBoleteria').addClass('d-none');
-      $('#btnEditBoleteria').removeClass('d-none');  
+      $('#btnEditBoleteria').removeClass('d-none');
       $('#tipo_boleteria').val(tipo);
       $('#valor_boleteria').val(valor);
       $('#cantidad_boleteria').val(cantidad);
       $('#parametro').val(id_fila);
-    
+
     }
     function updateFila(){
-    
-     
+
+
       let parametro = document.getElementById('parametro').value;
       $('#boleta_'+parametro).parent().remove();
       agregarFila();
-    
-       
-    
+
+
+
     }
-    
+
     function borrarCampos(){
       $("#tipo_boleteria").val('');
       $("#valor_boleteria").val('');
       $("#cantidad_boleteria").val('');
       return;
-    
-      
+
+
     }
     function openModal(){
       $("#tipo_boleteria").val('');
@@ -308,7 +308,7 @@ function Direccion(n){
       $('#ModalBoleteria').modal('show');
       $('#btnBoleteria').removeClass('d-none');
       $('#btnEditBoleteria').addClass('d-none');
-    
+
     }
 
     Array.prototype.forEach.call(document.getElementsByClassName('g-recaptcha'), function(element) {
@@ -323,9 +323,9 @@ function Direccion(n){
           }
       }, true);
   });
-    
+
   document.addEventListener('submit',(e)=>{
-      if(e.target.matches('.formConsultarTramite')){     
+      if(e.target.matches('.formConsultarTramite')){
        let response = grecaptcha.getResponse();
       if (response.length == 0) {
         alert("Captcha no verificado");
@@ -346,25 +346,25 @@ function Direccion(n){
 
     }
   })
-    
-    var button = document.getElementById('button-modal');
-    button.addEventListener("keypress", function(event) {
-     if (event.key === "Enter") {
-       event.preventDefault();
-       button.click();
-     }
-   });
-   
 
-   var button2 = document.getElementById('button-modal-2');
-   button2.addEventListener("keypress", function(event) {
-     if (event.key === "Enter") {
-       event.preventDefault();
-       button2.click();
-     }
-   });
+   //  var button = document.getElementById('button-modal');
+   //  button.addEventListener("keypress", function(event) {
+   //   if (event.key === "Enter") {
+   //     event.preventDefault();
+   //     button.click();
+   //   }
+   // });
 
- 
 
-  
+   // var button2 = document.getElementById('button-modal-2');
+   // button2.addEventListener("keypress", function(event) {
+   //   if (event.key === "Enter") {
+   //     event.preventDefault();
+   //     button2.click();
+   //   }
+   // });
+
+
+
+
 

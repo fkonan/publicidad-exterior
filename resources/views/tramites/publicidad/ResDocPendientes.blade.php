@@ -13,19 +13,18 @@
 
 <div class="container mt-3 mb-4 m-xs-x-3" id="body_eventos">
 	@include('tramites.titulo')
-	
+
         <div class="container-fluid">
             <div class="row mt-2">
                 <div class="col-md-8 col-lg-8 col-sm-12 col-xs-12">
-					@include('tramites.publicidad.Introduccion')
-                   
+
                    <div class="col-md-12">
 
                 <div class="alert-success-govco alert alert-dismissible fade show animate__animated animate__bounceInRight" aria-label="Alerta: caso de éxito">
                      <div class="alert-heading">
                       <span class="govco-icon govco-icon-check-cn size-2x"></span>
                       <span class="headline-l-govco">Tu actualización se realizo correctamente</span>
-                      
+
                     </div>
                     <p>Apreciado Ciudadano, su solicitud ha sido recibida satisfactoriamente para consultar el estado de sus solicitud tenga en cuenta el siguiente numero de radicado: <strong> {{$Solicitud->radicado}}</strong></p>
                   </div>
@@ -37,14 +36,14 @@
 
 
             </div>
-                  
+
                  </div>
-              
+
 			<div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
 				@include('tramites.publicidad.informativo')
 			</div>
 		</div>
 	</div>
-</div> 
+</div>
 @include('tramites.publicidad.form_consulta')
 @endsection

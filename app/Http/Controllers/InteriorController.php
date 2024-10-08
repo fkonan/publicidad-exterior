@@ -21,409 +21,410 @@ use Illuminate\Support\Facades\Crypt;
 
 class InteriorController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
-    public function index()
-    {
-        return view('tramites.interior.index');
-    }
-
-    public function parqueaderoIndex()
-    {
-
-        $sEnviadas = Parqueadero::where('estado_solicitud', 'ENVIADA')->get();
-        $sPendientes = Parqueadero::where('estado_solicitud', 'PENDIENTE')->get();
-        $sEnRevision = Parqueadero::where('estado_solicitud', 'REVISION-PLANEACION')->get();
-        $sRevisadas = Parqueadero::where('estado_solicitud', 'RESPUESTA-PLANEACION')->get();
-        $sAprobadas = Parqueadero::where('estado_solicitud', 'APROBADA')->get();
-        $sRechazadas = Parqueadero::where('estado_solicitud', 'RECHAZADA')->get();
-        $porCerrar =  Parqueadero::where('estado_solicitud', 'PENDIENTE')->where('fecha_pendiente' ,'<',DB::raw('DATE_ADD(NOW(),INTERVAL 5 DAY)'))->get()->count();
-        $porCerrarPlaneacion =  Parqueadero::where('estado_solicitud', 'REVISION-PLANEACION')->where('fecha_pendiente_planeacion' ,'<',DB::raw('DATE_ADD(NOW(),INTERVAL 5 DAY)'))->get()->count();           
-        $count_enviadas = $sEnviadas->count();
-        $count_pendientes = $sPendientes->count();
-        $count_enRevision = $sEnRevision->count();
-        $count_revisadas = $sRevisadas->count();
-        $count_aprobadas = $sAprobadas->count();
-        $count_rechazadas = $sRechazadas->count();
-
-        return view('tramites.interior.parqueaderos.index', compact('sEnviadas', 'sEnRevision', 'sPendientes', 'sRevisadas', 'sAprobadas', 'sRechazadas', 'count_enviadas', 'count_pendientes','count_enRevision', 'count_revisadas', 'count_aprobadas', 'count_rechazadas', 'porCerrar', 'porCerrarPlaneacion'));
-    }
-
-    public function parqueaderoDetalle($id)
-    {
-
-        $solicitud = Parqueadero::findOrFail($id);
-
-        return view('tramites.interior.parqueaderos.detalle', compact('solicitud'));
-    }
-
-    public function parqueaderoUpdate(Request $request)
-    {
-
-        $datos = Parqueadero::findOrFail($request->id);
-
-        if ($request->estado_solicitud == 'PENDIENTE') {
-
-            $this->validate($request, [
-                "observaciones_solicitud" => 'required',
-                "estado_solicitud" => 'required'
-            ]);
-
-
-            $date = date('Y-m-d');
-            //sumo 30 días
-            $date_30 = date("Y-m-d", strtotime($date . "+15 Weekday"));
-
-
-            $detalleCorreo = [
-                'nombres' => $datos->nom_solicitante . ' ' . $datos->ape_solicitante,
-                'mensaje' => $request->observaciones_solicitud,
-                'Subject' => 'Documentos Pendientes Solicitud de Categorización de Parqueaderos N°' . $datos->radicado,
-                'documento' => 'NO',
-                'fecha_pendiente' => $date_30,
-                'radicado'  => $datos->radicado,
-                'estado' => $request->estado_solicitud,
-                'id'=> Crypt::encrypt($request->id)
-            ];
-
-            // actualizar datos
-            $datos->estado_solicitud = $request->estado_solicitud;
-            $datos->observaciones_solicitud = $request->observaciones_solicitud;
-            $datos->fecha_actuacion = $date;
-            $datos->fecha_pendiente = $date_30;
-            $datos->act_documentos = null;
-
-            if ($datos->save()) {
-
-                //auditoria
-                $auditoria = Auditoria::create([
-                    'usuario' => $request->username,
-                    'proceso_afectado' => 'Radicado-' . $datos->radicado,
-                    'tramite'=>'CATEGORIZACION DE PARQUEADEROS',
-                    'radicado'=> $datos->radicado,
-                    'accion' => 'update estado ' . $request->estado_solicitud,
-                    'observacion'=>$request->observaciones_solicitud
-
-                ]);
-
-                Mail::to($datos->email_responsable)->queue(new NotificacionParqueaderos($detalleCorreo));
-                Alert::success('Operacion Exitosa', 'Se ha actualizado exitosamente el estado del tramite en el sistema');
-                return redirect()->route('interior.parqueaderos.index');
-            } else {
-
-                Alert::error('Error', 'Ha ocurrido un erro al registrar la actualización de la solicitud');
-                return redirect()->route('interior.parqueaderos.index');
-            }
-        } elseif ($request->estado_solicitud == 'REVISION-PLANEACION') {
-
-            $this->validate($request, [
-                "observaciones_solicitud" => 'required',
-                "estado_solicitud" => 'required'
-            ]);
-
-            $date = date('Y-m-d');
-            //sumo 30 días
-            $date_30 = NULL;
-            $date_planeacion = date("Y-m-d", strtotime($date . "+15 Weekday"));
-
-            $detalleCorreo = [
-                'nombres' => 'Francia Milena Zuluaga Tangarife',
-                'mensaje' => $request->observaciones_solicitud,
-                'Subject' => 'Revision de Solicitud Pendiente Categorización de parqueaderos N°' . $datos->radicado,
-                'documento' => 'NO',
-                'fecha_pendiente' => $date_30,
-                'radicado'  => $datos->radicado,
-                'estado' => 'FUNCIONARIO',
-
-            ];
-
-            // actualizar datos
-            $datos->estado_solicitud = $request->estado_solicitud;
-            $datos->observaciones_solicitud = $request->observaciones_solicitud;
-            $datos->fecha_actuacion = $date;
-            $datos->fecha_pendiente = $date_30;
-            $datos->act_documentos = null;
-            $datos->fecha_pendiente_planeacion = $date_planeacion;
-
-            $correo_responsable = ['iabarraganj@bucaramanga.gov.co', 'pdiaz@bucaramanga.gov.co'];
-            // $correo_responsable = ['julianrincon9230@gmail.com', 'ojrincon@bucaramanga.gov.co'];
-
-            if ($datos->save()) {
-
-                //auditoria
-                $auditoria = Auditoria::create([
-                    'usuario' => $request->username,
-                    'proceso_afectado' => 'Radicado-' . $datos->radicado,
-                    'tramite'=>'CATEGORIZACION DE PARQUEADEROS',
-                    'radicado'=> $datos->radicado,
-                    'accion' => 'update a estado ' . $request->estado_solicitud,
-                    'observacion'=>$request->observaciones_solicitud
-
-                ]);
-
-                Mail::to($correo_responsable)->queue(new NotificacionParqueaderos($detalleCorreo));
-                Alert::success('Operacion Exitosa', 'Se ha actualizado exitosamente el estado del tramite en el sistema');
-                return redirect()->route('interior.parqueaderos.index');
-            } else {
-
-                Alert::error('Error', 'Ha ocurrido un erro al registrar la actualización de la solicitud');
-            }
-        } elseif ($request->estado_solicitud == 'RESPUESTA-PLANEACION') {
-
-            $this->validate($request, [
-                "observaciones_planeacion" => 'required',
-                "documento_respuesta_planeacion" => 'required',
-                "estado_solicitud" => 'required'
-            ]);
-
-            $date = date('Y-m-d');
-            //sumo 30 días
-            $date_30 = NULL;
-            $date_planeacion = null;
-
-
-            //mover documento a storage
-            $adjunto1 = $request->file('documento_respuesta_planeacion')->storeAs('documentos_parqueaderos/' . $datos->radicado, 'Concepto_Tecnico-' . $datos->radicado . '.pdf');
-
-            //crear ruta de guardado
-            $ruta_guardado = 'storage/documentos_parqueaderos/' . $datos->radicado . '/Concepto_Tecnico-' . $datos->radicado . '.pdf';
-            $correo_responsable = 'cjguerrero@bucaramanga.gov.co';
-            // $correo_responsable = 'ojrincon@bucaramanga.gov.co';
-
-            $detalleCorreo = [
-                'nombres' => 'Carlos Javier Guerrero Gutierrez',
-                'mensaje' => $request->observaciones_planeacion,
-                'Subject' => 'Respuesta concepto Tecnico de Solicitud N°' . $datos->radicado,
-                'documento' => 'NO',
-                'fecha_pendiente' => $date_30,
-                'radicado'  => $datos->radicado,
-                'estado' => 'FUNCIONARIO',
-
-            ];
-
-            if ($adjunto1) {
-                // actualizar
-
-                $datos->estado_solicitud = $request->estado_solicitud;
-                $datos->observaciones_solicitud = $request->observaciones_planeacion;
-                $datos->fecha_actuacion = $date;
-                $datos->fecha_pendiente_planeacion = $date_planeacion;
-                $datos->adjunto_resPlaneacion = $ruta_guardado;
-                $datos->act_documentos = null;
-
-
-
-                if ($datos->save()) {
-
-                    $auditoria = Auditoria::create([
-                        'usuario' => $request->username,
-                        'proceso_afectado' => 'Radicado-' . $datos->radicado,
-                        'tramite'=>'CATEGORIZACION DE PARQUEADEROS',
-                        'radicado'=> $datos->radicado,
-                        'accion' => 'update a estado ' . $request->estado_solicitud,
-                        'observacion'=>$request->observaciones_planeacion
-
-                    ]);
-
-                    $auditoriaPlaneacion = AuditoriaParqueadero::create([
-                        'parqueadero_id' =>$datos->id,
-                        'radicado'=> $datos->radicado,
-                        'nom_solicitante'=>$datos->nom_solicitante,
-                        'ape_solicitante'=>$datos->ape_solicitante,
-                        'tipo_documento'=>$datos->tipo_documento,
-                        'identificacion_solicitante'=>$datos->identificacion_solicitante,
-                        'direccion_solicitante'=>$datos->direccion_solicitante,
-                        'barrio_solicitante'=>$datos->barrio_solicitante,
-                        'tel_solicitante'=>$datos->tel_solicitante,
-                        'email_responsable'=>$datos->email_responsable,
-                        'nombre_empresa'=>$datos->nombre_empresa,
-                        'direccion_empresa'=>$datos->direccion_empresa,
-                        'barrio_empresa'=>$datos->barrio_empresa,
-                        'tel_empresa'=>$datos->tel_empresa,
-                        'adjunto_camara_rut'=>$datos->adjunto_camara_rut,
-                        'adjunto_planos'=>$datos->adjunto_planos,
-                        'adjunto_licencia'=>$datos->adjunto_licencia,
-                        'estado_solicitud'=> $request->estado_solicitud,
-                        'observaciones_solicitud'=>$request->observaciones_planeacion,
-                        'fecha_actuacion'=> $date,
-                        'adjunto_resPlaneacion'=> $ruta_guardado
-                    ]);
-
-                    Mail::to($correo_responsable)->queue(new NotificacionParqueaderos($detalleCorreo));
-                    Alert::success('Operacion Exitosa', 'Se actualizado exitosamente el estado del tramite en el sistema');
-                    return redirect()->route('planeacion.parqueaderos.index');
-                } else {
-
-                    Alert::error('Error', 'Ha ocurrido un error al registrar la actualizacion de la solicitud');
-                    return redirect()->route('planeacion.parqueaderos.index');
-                }
-            } else {
-
-                Alert::error('Error', 'Ocurrio un error al cargar el archivo al servidor');
-                return redirect()->route('planeacion.parqueaderos.index');
-            }
-        } elseif ($request->estado_solicitud == 'RECHAZADA') {
-
-            $this->validate($request, [
-                "observaciones_solicitud" => 'required',
-                "estado_solicitud" => 'required'
-            ]);
-
-            // fecha de actuacion
-            $date = date('Y-m-d');
-
-            $date_30 = null;
-
-            $detalleCorreo = [
-                'nombres' => $datos->nom_solicitante . ' ' . $datos->ape_solicitante,
-                'mensaje' => $request->observaciones_solicitud,
-                'Subject' => 'Solicitud Rechazada N°' . $datos->radicado,
-                'documento' => 'RT',
-                'fecha_pendiente' => $date_30,
-                'radicado'  => $datos->radicado,
-                'estado' => $request->estado_solicitud
-            ];
-
-            $datos->estado_solicitud = $request->estado_solicitud;
-            $datos->observaciones_solicitud = $request->observaciones_solicitud;
-            $datos->fecha_actuacion = $date;
-
-
-            if ($datos->save()) {
-
-                $auditoria = Auditoria::create([
-                    'usuario' => $request->username,
-                    'proceso_afectado' => 'Radicado-' . $datos->radicado,
-                    'tramite'=>'CATEGORIZACION DE PARQUEADEROS',
-                    'radicado'=> $datos->radicado,
-                    'accion' => 'update estado ' . $request->estado_solicitud,
-                    'observacion'=>$request->observaciones_solicitud
-
-                ]);
-
-                
-
-                Mail::to($datos->email_responsable)->queue(new NotificacionParqueaderos($detalleCorreo));
-                Alert::success('Operacion Exitosa', 'Se actualizado exitosamente el estado del tramite en el sistema');
-                return redirect()->route('interior.parqueaderos.index');
-            } else {
-
-                Alert::error('Error', 'Ha ocurrido un error al registrar la actualizacion de la solicitud');
-                return redirect()->route('interior.parqueaderos.index');
-            }
-        } elseif ($request->estado_solicitud == 'APROBADA') {
-
-            $this->validate($request, [
-                "observaciones_solicitud" => 'required',
-                "estado_solicitud" => 'required',
-                "documento_respuesta" => 'required'
-            ]);
-
-            $date = date('Y-m-d');
-            $date_30 = null;
-
-            //mover documento a storage
-            $adjunto1 = $request->file('documento_respuesta')->storeAs('documentos_parqueaderos/' . $datos->radicado, 'Acto_Administrativo_solicitiud_No-' . $datos->radicado . '.pdf');
-
-            //crear ruta de guardado
-            $ruta_guardado = 'storage/documentos_parqueaderos/' . $datos->radicado . '/Acto_Administrativo_solicitiud_No-' . $datos->radicado . '.pdf';
-
-            $detalleCorreo = [
-                'nombres' => $datos->nom_solicitante . ' ' . $datos->ape_solicitante,
-                'mensaje' => $request->observaciones_solicitud,
-                'Subject' => 'Solicitud Aprobada N°' . $datos->radicado,
-                'documento' => 'SI',
-                'fecha_pendiente' => $date_30,
-                'radicado'  => $datos->radicado,
-                'estado' => $request->estado_solicitud,
-
-            ];
-
-            if ($adjunto1) {
-                // actualizar
-
-                $datos->estado_solicitud = $request->estado_solicitud;
-                $datos->observaciones_solicitud = $request->observaciones_solicitud;
-                $datos->fecha_actuacion = $date;
-                $datos->adjunto_respuesta = $ruta_guardado;
-
-
-
-                if ($datos->save()) {
-
-                    $auditoria = Auditoria::create([
-                        'usuario' => $request->username,
-                        'proceso_afectado' => 'Radicado-' . $datos->radicado,
-                        'tramite'=>'CATEGORIZACION DE PARQUEADEROS',
-                         'radicado'=> $datos->radicado,
-                        'accion' => 'update estado ' . $request->estado_solicitud,
-                        'observacion'=>$request->observaciones_solicitud
-
-                    ]);
-
-                    Mail::to($datos->email_responsable)->queue(new NotificacionParqueaderos($detalleCorreo));
-                    Alert::success('Operacion Exitosa', 'Se actualizado exitosamente el estado del tramite en el sistema');
-                    return redirect()->route('interior.parqueaderos.index');
-                } else {
-
-                    Alert::error('Error', 'Ha ocurrido un error al registrar la actualizacion de la solicitud');
-                    return redirect()->route('interior.parqueaderos.index');
-                }
-            } else {
-
-                Alert::error('Error', 'Ocurrio un error al cargar el archivo al servidor');
-                return redirect()->route('interior.parqueaderos.index');
-            }
-        }
-    }
-
-    /** PUBLICIDAD EXTERIOR */
-   public function publicidadIndex()
+   public function __construct()
+   {
+      $this->middleware('auth');
+   }
+
+   public function index()
+   {
+      return view('tramites.interior.index');
+   }
+
+   public function parqueaderoIndex()
    {
 
-      $count_vallas = Publicidad::where('modalidad', 'VALLAS')->count();
-      $count_pendones = Publicidad::where('modalidad', 'PENDONES')->count();
-      $count_pend1 = Publicidad::where('sub_modalidad', 'AVISOS DE IDENTIFICACION DE ESTABLECIMEINTOS COMERCIALES')->count();
-      $count_pend2 = Publicidad::where('sub_modalidad', 'IDENTIFICACION PROYECTOS INMOBOLIARIOS')->count();
-      $count_pend3 = Publicidad::where('sub_modalidad', 'AVISOS TIPO COLOMBINA')->count();
-      $count_murales = Publicidad::where('modalidad', 'MURALES')->count();
-      $count_pasacalles = Publicidad::where('modalidad', 'PASACALLES')->count();
-      $count_aerea = Publicidad::where('modalidad', 'PUBLICIDAD AEREA')->count();
-      $count_movil = Publicidad::where('modalidad', 'MOVIL')->count();
+      $sEnviadas = Parqueadero::where('estado_solicitud', 'ENVIADA')->get();
+      $sPendientes = Parqueadero::where('estado_solicitud', 'PENDIENTE')->get();
+      $sEnRevision = Parqueadero::where('estado_solicitud', 'REVISION-PLANEACION')->get();
+      $sRevisadas = Parqueadero::where('estado_solicitud', 'RESPUESTA-PLANEACION')->get();
+      $sAprobadas = Parqueadero::where('estado_solicitud', 'APROBADA')->get();
+      $sRechazadas = Parqueadero::where('estado_solicitud', 'RECHAZADA')->get();
+      $porCerrar =  Parqueadero::where('estado_solicitud', 'PENDIENTE')->where('fecha_pendiente', '<', DB::raw('DATE_ADD(NOW(),INTERVAL 5 DAY)'))->get()->count();
+      $porCerrarPlaneacion =  Parqueadero::where('estado_solicitud', 'REVISION-PLANEACION')->where('fecha_pendiente_planeacion', '<', DB::raw('DATE_ADD(NOW(),INTERVAL 5 DAY)'))->get()->count();
+      $count_enviadas = $sEnviadas->count();
+      $count_pendientes = $sPendientes->count();
+      $count_enRevision = $sEnRevision->count();
+      $count_revisadas = $sRevisadas->count();
+      $count_aprobadas = $sAprobadas->count();
+      $count_rechazadas = $sRechazadas->count();
 
-      return view('tramites.interior.publicidad.index', compact('count_vallas', 'count_pendones', 'count_murales', 'count_pasacalles', 'count_aerea', 'count_movil', 'count_pend1', 'count_pend2', 'count_pend3'));
+      return view('tramites.interior.parqueaderos.index', compact('sEnviadas', 'sEnRevision', 'sPendientes', 'sRevisadas', 'sAprobadas', 'sRechazadas', 'count_enviadas', 'count_pendientes', 'count_enRevision', 'count_revisadas', 'count_aprobadas', 'count_rechazadas', 'porCerrar', 'porCerrarPlaneacion'));
+   }
+
+   public function parqueaderoDetalle($id)
+   {
+
+      $solicitud = Parqueadero::findOrFail($id);
+
+      return view('tramites.interior.parqueaderos.detalle', compact('solicitud'));
+   }
+
+   public function parqueaderoUpdate(Request $request)
+   {
+
+      $datos = Parqueadero::findOrFail($request->id);
+
+      if ($request->estado_solicitud == 'PENDIENTE') {
+
+         $this->validate($request, [
+            "observaciones_solicitud" => 'required',
+            "estado_solicitud" => 'required'
+         ]);
+
+
+         $date = date('Y-m-d');
+         //sumo 30 días
+         $date_30 = date("Y-m-d", strtotime($date . "+15 Weekday"));
+
+
+         $detalleCorreo = [
+            'nombres' => $datos->nom_solicitante . ' ' . $datos->ape_solicitante,
+            'mensaje' => $request->observaciones_solicitud,
+            'Subject' => 'Documentos Pendientes Solicitud de Categorización de Parqueaderos N°' . $datos->radicado,
+            'documento' => 'NO',
+            'fecha_pendiente' => $date_30,
+            'radicado'  => $datos->radicado,
+            'estado' => $request->estado_solicitud,
+            'id' => Crypt::encrypt($request->id)
+         ];
+
+         // actualizar datos
+         $datos->estado_solicitud = $request->estado_solicitud;
+         $datos->observaciones_solicitud = $request->observaciones_solicitud;
+         $datos->fecha_actuacion = $date;
+         $datos->fecha_pendiente = $date_30;
+         $datos->act_documentos = null;
+
+         if ($datos->save()) {
+
+            //auditoria
+            $auditoria = Auditoria::create([
+               'usuario' => $request->username,
+               'proceso_afectado' => 'Radicado-' . $datos->radicado,
+               'tramite' => 'CATEGORIZACION DE PARQUEADEROS',
+               'radicado' => $datos->radicado,
+               'accion' => 'update estado ' . $request->estado_solicitud,
+               'observacion' => $request->observaciones_solicitud
+
+            ]);
+
+            Mail::to($datos->email_responsable)->queue(new NotificacionParqueaderos($detalleCorreo));
+            Alert::success('Operacion Exitosa', 'Se ha actualizado exitosamente el estado del tramite en el sistema');
+            return redirect()->route('interior.parqueaderos.index');
+         } else {
+
+            Alert::error('Error', 'Ha ocurrido un erro al registrar la actualización de la solicitud');
+            return redirect()->route('interior.parqueaderos.index');
+         }
+      } elseif ($request->estado_solicitud == 'REVISION-PLANEACION') {
+
+         $this->validate($request, [
+            "observaciones_solicitud" => 'required',
+            "estado_solicitud" => 'required'
+         ]);
+
+         $date = date('Y-m-d');
+         //sumo 30 días
+         $date_30 = NULL;
+         $date_planeacion = date("Y-m-d", strtotime($date . "+15 Weekday"));
+
+         $detalleCorreo = [
+            'nombres' => 'Francia Milena Zuluaga Tangarife',
+            'mensaje' => $request->observaciones_solicitud,
+            'Subject' => 'Revision de Solicitud Pendiente Categorización de parqueaderos N°' . $datos->radicado,
+            'documento' => 'NO',
+            'fecha_pendiente' => $date_30,
+            'radicado'  => $datos->radicado,
+            'estado' => 'FUNCIONARIO',
+
+         ];
+
+         // actualizar datos
+         $datos->estado_solicitud = $request->estado_solicitud;
+         $datos->observaciones_solicitud = $request->observaciones_solicitud;
+         $datos->fecha_actuacion = $date;
+         $datos->fecha_pendiente = $date_30;
+         $datos->act_documentos = null;
+         $datos->fecha_pendiente_planeacion = $date_planeacion;
+
+         $correo_responsable = ['iabarraganj@bucaramanga.gov.co', 'pdiaz@bucaramanga.gov.co'];
+         // $correo_responsable = ['julianrincon9230@gmail.com', 'ojrincon@bucaramanga.gov.co'];
+
+         if ($datos->save()) {
+
+            //auditoria
+            $auditoria = Auditoria::create([
+               'usuario' => $request->username,
+               'proceso_afectado' => 'Radicado-' . $datos->radicado,
+               'tramite' => 'CATEGORIZACION DE PARQUEADEROS',
+               'radicado' => $datos->radicado,
+               'accion' => 'update a estado ' . $request->estado_solicitud,
+               'observacion' => $request->observaciones_solicitud
+
+            ]);
+
+            Mail::to($correo_responsable)->queue(new NotificacionParqueaderos($detalleCorreo));
+            Alert::success('Operacion Exitosa', 'Se ha actualizado exitosamente el estado del tramite en el sistema');
+            return redirect()->route('interior.parqueaderos.index');
+         } else {
+
+            Alert::error('Error', 'Ha ocurrido un erro al registrar la actualización de la solicitud');
+         }
+      } elseif ($request->estado_solicitud == 'RESPUESTA-PLANEACION') {
+
+         $this->validate($request, [
+            "observaciones_planeacion" => 'required',
+            "documento_respuesta_planeacion" => 'required',
+            "estado_solicitud" => 'required'
+         ]);
+
+         $date = date('Y-m-d');
+         //sumo 30 días
+         $date_30 = NULL;
+         $date_planeacion = null;
+
+
+         //mover documento a storage
+         $adjunto1 = $request->file('documento_respuesta_planeacion')->storeAs('documentos_parqueaderos/' . $datos->radicado, 'Concepto_Tecnico-' . $datos->radicado . '.pdf');
+
+         //crear ruta de guardado
+         $ruta_guardado = 'storage/documentos_parqueaderos/' . $datos->radicado . '/Concepto_Tecnico-' . $datos->radicado . '.pdf';
+         $correo_responsable = 'cjguerrero@bucaramanga.gov.co';
+         // $correo_responsable = 'ojrincon@bucaramanga.gov.co';
+
+         $detalleCorreo = [
+            'nombres' => 'Carlos Javier Guerrero Gutierrez',
+            'mensaje' => $request->observaciones_planeacion,
+            'Subject' => 'Respuesta concepto Tecnico de Solicitud N°' . $datos->radicado,
+            'documento' => 'NO',
+            'fecha_pendiente' => $date_30,
+            'radicado'  => $datos->radicado,
+            'estado' => 'FUNCIONARIO',
+
+         ];
+
+         if ($adjunto1) {
+            // actualizar
+
+            $datos->estado_solicitud = $request->estado_solicitud;
+            $datos->observaciones_solicitud = $request->observaciones_planeacion;
+            $datos->fecha_actuacion = $date;
+            $datos->fecha_pendiente_planeacion = $date_planeacion;
+            $datos->adjunto_resPlaneacion = $ruta_guardado;
+            $datos->act_documentos = null;
+
+
+
+            if ($datos->save()) {
+
+               $auditoria = Auditoria::create([
+                  'usuario' => $request->username,
+                  'proceso_afectado' => 'Radicado-' . $datos->radicado,
+                  'tramite' => 'CATEGORIZACION DE PARQUEADEROS',
+                  'radicado' => $datos->radicado,
+                  'accion' => 'update a estado ' . $request->estado_solicitud,
+                  'observacion' => $request->observaciones_planeacion
+
+               ]);
+
+               $auditoriaPlaneacion = AuditoriaParqueadero::create([
+                  'parqueadero_id' => $datos->id,
+                  'radicado' => $datos->radicado,
+                  'nom_solicitante' => $datos->nom_solicitante,
+                  'ape_solicitante' => $datos->ape_solicitante,
+                  'tipo_documento' => $datos->tipo_documento,
+                  'identificacion_solicitante' => $datos->identificacion_solicitante,
+                  'direccion_solicitante' => $datos->direccion_solicitante,
+                  'barrio_solicitante' => $datos->barrio_solicitante,
+                  'tel_solicitante' => $datos->tel_solicitante,
+                  'email_responsable' => $datos->email_responsable,
+                  'nombre_empresa' => $datos->nombre_empresa,
+                  'direccion_empresa' => $datos->direccion_empresa,
+                  'barrio_empresa' => $datos->barrio_empresa,
+                  'tel_empresa' => $datos->tel_empresa,
+                  'adjunto_camara_rut' => $datos->adjunto_camara_rut,
+                  'adjunto_planos' => $datos->adjunto_planos,
+                  'adjunto_licencia' => $datos->adjunto_licencia,
+                  'estado_solicitud' => $request->estado_solicitud,
+                  'observaciones_solicitud' => $request->observaciones_planeacion,
+                  'fecha_actuacion' => $date,
+                  'adjunto_resPlaneacion' => $ruta_guardado
+               ]);
+
+               Mail::to($correo_responsable)->queue(new NotificacionParqueaderos($detalleCorreo));
+               Alert::success('Operacion Exitosa', 'Se actualizado exitosamente el estado del tramite en el sistema');
+               return redirect()->route('planeacion.parqueaderos.index');
+            } else {
+
+               Alert::error('Error', 'Ha ocurrido un error al registrar la actualizacion de la solicitud');
+               return redirect()->route('planeacion.parqueaderos.index');
+            }
+         } else {
+
+            Alert::error('Error', 'Ocurrio un error al cargar el archivo al servidor');
+            return redirect()->route('planeacion.parqueaderos.index');
+         }
+      } elseif ($request->estado_solicitud == 'RECHAZADA') {
+
+         $this->validate($request, [
+            "observaciones_solicitud" => 'required',
+            "estado_solicitud" => 'required'
+         ]);
+
+         // fecha de actuacion
+         $date = date('Y-m-d');
+
+         $date_30 = null;
+
+         $detalleCorreo = [
+            'nombres' => $datos->nom_solicitante . ' ' . $datos->ape_solicitante,
+            'mensaje' => $request->observaciones_solicitud,
+            'Subject' => 'Solicitud Rechazada N°' . $datos->radicado,
+            'documento' => 'RT',
+            'fecha_pendiente' => $date_30,
+            'radicado'  => $datos->radicado,
+            'estado' => $request->estado_solicitud
+         ];
+
+         $datos->estado_solicitud = $request->estado_solicitud;
+         $datos->observaciones_solicitud = $request->observaciones_solicitud;
+         $datos->fecha_actuacion = $date;
+
+
+         if ($datos->save()) {
+
+            $auditoria = Auditoria::create([
+               'usuario' => $request->username,
+               'proceso_afectado' => 'Radicado-' . $datos->radicado,
+               'tramite' => 'CATEGORIZACION DE PARQUEADEROS',
+               'radicado' => $datos->radicado,
+               'accion' => 'update estado ' . $request->estado_solicitud,
+               'observacion' => $request->observaciones_solicitud
+
+            ]);
+
+
+
+            Mail::to($datos->email_responsable)->queue(new NotificacionParqueaderos($detalleCorreo));
+            Alert::success('Operacion Exitosa', 'Se actualizado exitosamente el estado del tramite en el sistema');
+            return redirect()->route('interior.parqueaderos.index');
+         } else {
+
+            Alert::error('Error', 'Ha ocurrido un error al registrar la actualizacion de la solicitud');
+            return redirect()->route('interior.parqueaderos.index');
+         }
+      } elseif ($request->estado_solicitud == 'APROBADA') {
+
+         $this->validate($request, [
+            "observaciones_solicitud" => 'required',
+            "estado_solicitud" => 'required',
+            "documento_respuesta" => 'required'
+         ]);
+
+         $date = date('Y-m-d');
+         $date_30 = null;
+
+         //mover documento a storage
+         $adjunto1 = $request->file('documento_respuesta')->storeAs('documentos_parqueaderos/' . $datos->radicado, 'Acto_Administrativo_solicitiud_No-' . $datos->radicado . '.pdf');
+
+         //crear ruta de guardado
+         $ruta_guardado = 'storage/documentos_parqueaderos/' . $datos->radicado . '/Acto_Administrativo_solicitiud_No-' . $datos->radicado . '.pdf';
+
+         $detalleCorreo = [
+            'nombres' => $datos->nom_solicitante . ' ' . $datos->ape_solicitante,
+            'mensaje' => $request->observaciones_solicitud,
+            'Subject' => 'Solicitud Aprobada N°' . $datos->radicado,
+            'documento' => 'SI',
+            'fecha_pendiente' => $date_30,
+            'radicado'  => $datos->radicado,
+            'estado' => $request->estado_solicitud,
+
+         ];
+
+         if ($adjunto1) {
+            // actualizar
+
+            $datos->estado_solicitud = $request->estado_solicitud;
+            $datos->observaciones_solicitud = $request->observaciones_solicitud;
+            $datos->fecha_actuacion = $date;
+            $datos->adjunto_respuesta = $ruta_guardado;
+
+
+
+            if ($datos->save()) {
+
+               $auditoria = Auditoria::create([
+                  'usuario' => $request->username,
+                  'proceso_afectado' => 'Radicado-' . $datos->radicado,
+                  'tramite' => 'CATEGORIZACION DE PARQUEADEROS',
+                  'radicado' => $datos->radicado,
+                  'accion' => 'update estado ' . $request->estado_solicitud,
+                  'observacion' => $request->observaciones_solicitud
+
+               ]);
+
+               Mail::to($datos->email_responsable)->queue(new NotificacionParqueaderos($detalleCorreo));
+               Alert::success('Operacion Exitosa', 'Se actualizado exitosamente el estado del tramite en el sistema');
+               return redirect()->route('interior.parqueaderos.index');
+            } else {
+
+               Alert::error('Error', 'Ha ocurrido un error al registrar la actualizacion de la solicitud');
+               return redirect()->route('interior.parqueaderos.index');
+            }
+         } else {
+
+            Alert::error('Error', 'Ocurrio un error al cargar el archivo al servidor');
+            return redirect()->route('interior.parqueaderos.index');
+         }
+      }
+   }
+
+   /** PUBLICIDAD EXTERIOR */
+   public function publicidadIndex()
+   {
+      $count_comerciales = Publicidad::where('modalidad', 'comerciales')->count();
+      $count_inmobiliarios = Publicidad::where('modalidad', 'inmobiliarios')->count();
+      $count_colombina = Publicidad::where('modalidad', 'colombina')->count();
+      $count_murales = Publicidad::where('modalidad', 'murales')->count();
+      $count_vallas = Publicidad::where('modalidad', 'vallas')->count();
+      $count_pendones = Publicidad::where('modalidad', 'pendones')->count();
+      $count_pasacalles = Publicidad::where('modalidad', 'pasacalles')->count();
+      $count_aerea = Publicidad::where('modalidad', 'aerea')->count();
+      $count_movil = Publicidad::where('modalidad', 'movil')->count();
+
+      return view('tramites.interior.publicidad.index', compact('count_comerciales', 'count_inmobiliarios', 'count_colombina', 'count_murales', 'count_vallas', 'count_pendones', 'count_pasacalles', 'count_aerea', 'count_movil'));
    }
 
    public function publicidadListarSolicitudes(Request $r)
    {
-     
-		$tipo = $r->tipo;
-		$sGrupos = array();
-		$estados = array("ENVIADA","EN PROGRESO","PENDIENTE","APROBADA","RECHAZADA");
-		$nombres = array("Enviadas","En Progreso","Pendientes","Aprobadas","Rechazadas");
-		$i=0;
-		foreach($estados as $estado){
-			$objeto = new myObject;
-			$objeto->datos = DB::select(Publicidad::SqlEstado($estado));
-			$objeto->titulo = str_replace(" ","",$estado);
-			$objeto->cantidad = count($objeto->datos);
-			$objeto->nombre = $nombres[$i];
-			$objeto->activo = "";
-			$sGrupos[] = $objeto;
-			$i++;
-		}
-		$sGrupos[0]->activo = "active";
-		
-		$porCerrar = DB::select(Publicidad::SqlXCerrar());
-		$PORCERRAR = 0;
-		if (!empty($porCerrar)){ $PORCERRAR = $porCerrar[0]->Cantidad;}
-		    
-     
-        return view('tramites.interior.publicidad.index1', compact('sGrupos','PORCERRAR', ''));
-    }
+
+      $tipo = $r->tipo;
+      $sGrupos = array();
+      $estados = array("ENVIADA", "EN PROGRESO", "PENDIENTE", "APROBADA", "RECHAZADA");
+      $nombres = array("Enviadas", "En Progreso", "Pendientes", "Aprobadas", "Rechazadas");
+      $i = 0;
+      foreach ($estados as $estado) {
+         $objeto = new myObject;
+         $objeto->datos = DB::select(Publicidad::SqlEstado($estado));
+         $objeto->titulo = str_replace(" ", "", $estado);
+         $objeto->cantidad = count($objeto->datos);
+         $objeto->nombre = $nombres[$i];
+         $objeto->activo = "";
+         $sGrupos[] = $objeto;
+         $i++;
+      }
+      $sGrupos[0]->activo = "active";
+
+      $porCerrar = DB::select(Publicidad::SqlXCerrar());
+      $PORCERRAR = 0;
+      if (!empty($porCerrar)) {
+         $PORCERRAR = $porCerrar[0]->Cantidad;
+      }
+
+
+      return view('tramites.interior.publicidad.index1', compact('sGrupos', 'PORCERRAR', ''));
+   }
 
    public function publicidadDetalle($id)
    {
@@ -759,196 +760,130 @@ class InteriorController extends Controller
 
    /** FIN PUBLICIDAD EXTERIOR */
 
-     ////------------ FUCIONES PARA EVENTOS ---------------------------//////////////////////////////
+   ////------------ FUCIONES PARA EVENTOS ---------------------------//////////////////////////////
 
-     public function eventosIndex(){
+   public function eventosIndex()
+   {
 
-        $sEnviadas = Evento::where('estado_solicitud', 'ENVIADA')->get();
-        $sPendientes = Evento::where('estado_solicitud', 'PENDIENTE')->get();        
-        $sAprobadas = Evento::where('estado_solicitud', 'APROBADA')->get();
-        $sRechazadas = Evento::where('estado_solicitud', 'RECHAZADA')->get();
-        $porCerrar =  Evento::where('estado_solicitud', 'PENDIENTE')->where('fecha_pendiente' ,'<',DB::raw('DATE_ADD(NOW(),INTERVAL 5 DAY)'))->get()->count();
-        $porCumplirEvento =  Evento::where('estado_solicitud', 'PENDIENTE')->where('fecha_evento' ,'<',DB::raw('DATE_ADD(NOW(),INTERVAL 7 DAY)'))->get()->count();
-        $porCumplirEnviada =  Evento::where('estado_solicitud', 'ENVIADA')->where('fecha_evento' ,'<',DB::raw('DATE_ADD(NOW(),INTERVAL 7 DAY)'))->get()->count();           
-        $count_enviadas= $sEnviadas->count();
-        $count_pendientes = $sPendientes->count();
-        $count_aprobadas = $sAprobadas->count();
-        $count_rechazadas = $sRechazadas->count();
+      $sEnviadas = Evento::where('estado_solicitud', 'ENVIADA')->get();
+      $sPendientes = Evento::where('estado_solicitud', 'PENDIENTE')->get();
+      $sAprobadas = Evento::where('estado_solicitud', 'APROBADA')->get();
+      $sRechazadas = Evento::where('estado_solicitud', 'RECHAZADA')->get();
+      $porCerrar =  Evento::where('estado_solicitud', 'PENDIENTE')->where('fecha_pendiente', '<', DB::raw('DATE_ADD(NOW(),INTERVAL 5 DAY)'))->get()->count();
+      $porCumplirEvento =  Evento::where('estado_solicitud', 'PENDIENTE')->where('fecha_evento', '<', DB::raw('DATE_ADD(NOW(),INTERVAL 7 DAY)'))->get()->count();
+      $porCumplirEnviada =  Evento::where('estado_solicitud', 'ENVIADA')->where('fecha_evento', '<', DB::raw('DATE_ADD(NOW(),INTERVAL 7 DAY)'))->get()->count();
+      $count_enviadas = $sEnviadas->count();
+      $count_pendientes = $sPendientes->count();
+      $count_aprobadas = $sAprobadas->count();
+      $count_rechazadas = $sRechazadas->count();
 
 
-        return view('tramites.interior.eventos.index', compact('sEnviadas', 'sPendientes', 'sAprobadas', 'sRechazadas', 'count_enviadas', 'count_pendientes', 'count_aprobadas', 'count_rechazadas', 'porCerrar', 'porCumplirEvento', 'porCumplirEnviada'));        
+      return view('tramites.interior.eventos.index', compact('sEnviadas', 'sPendientes', 'sAprobadas', 'sRechazadas', 'count_enviadas', 'count_pendientes', 'count_aprobadas', 'count_rechazadas', 'porCerrar', 'porCumplirEvento', 'porCumplirEnviada'));
+   }
 
-    }
+   public function eventoDetalle($id)
+   {
+      $solicitud = Evento::findOrFail($id);
+      $doc_update = DocUpdate::where('evento_id', $id)->get();
 
-    public function eventoDetalle($id)
-    {
-        $solicitud = Evento::findOrFail($id);
-        $doc_update = DocUpdate::where('evento_id', $id)->get();            
+      return view('tramites.interior.eventos.detalle', compact('solicitud', 'doc_update'));
+   }
 
-        return view('tramites.interior.eventos.detalle', compact('solicitud', 'doc_update'));
-    }
+   public function eventosUpdate(Request $request)
+   {
 
-    public function eventosUpdate(Request $request){
+      $datos = Evento::findOrFail($request->id);
 
-        $datos = Evento::findOrFail($request->id);
+      if ($datos->tipo_persona == 1) {
+         $responsable = $datos->nom_responsable . ' ' . $datos->ape_responsable;
+      } else if ($datos->tipo_persona == 2) {
+         $responsable = $datos->razon_social;
+      }
 
-        if($datos->tipo_persona == 1){            
-        $responsable = $datos->nom_responsable.' '.$datos->ape_responsable;
-        }else if($datos->tipo_persona ==2){           
-            $responsable = $datos->razon_social;
-        }
+      if ($request->estado_solicitud == 'PENDIENTE') {
 
-        if ($request->estado_solicitud == 'PENDIENTE') {
+         $this->validate($request, [
+            "observaciones_solicitud" => 'required',
+            "estado_solicitud" => 'required'
+         ]);
 
-            $this->validate($request, [
-                "observaciones_solicitud" => 'required',
-                "estado_solicitud" => 'required'
+
+         $date = date('Y-m-d');
+         //sumo 30 días
+         $date_30 = date("Y-m-d", strtotime($date . "+15 days"));
+
+         // pendiente validacion
+
+
+         $detalleCorreo = [
+            'nombres' => $responsable,
+            'mensaje' => $request->observaciones_solicitud,
+            'Subject' => 'Documentos Pendientes Solicitud de Permisos para Espectaculos Públicos N°' . $datos->radicado,
+            'documento' => 'NO',
+            'fecha_pendiente' => $date_30,
+            'radicado'  => $datos->radicado,
+            'estado' => $request->estado_solicitud,
+            'id' => Crypt::encrypt($request->id)
+         ];
+
+         // actualizar datos
+         $datos->estado_solicitud = $request->estado_solicitud;
+         $datos->observaciones_solicitud = $request->observaciones_solicitud;
+         $datos->fecha_actuacion = $date;
+         $datos->fecha_pendiente = $date_30;
+         $datos->act_documentos = null;
+
+         if ($datos->save()) {
+
+            //auditoria
+            $auditoria = Auditoria::create([
+               'usuario' => $request->username,
+               'proceso_afectado' => 'Radicado-' . $datos->radicado,
+               'tramite' => 'PERMISOS PARA ESPECTACULOS PUBLICOS',
+               'radicado' => $datos->radicado,
+               'accion' => 'update a estado ' . $request->estado_solicitud,
+               'observacion' => $request->observaciones_solicitud
+
             ]);
 
+            Mail::to($datos->email_responsable)->queue(new NotificacionEventos($detalleCorreo));
+            Alert::success('Operacion Exitosa', 'Se ha actualizado exitosamente el estado del tramite en el sistema');
+            return redirect()->route('interior.eventos.index');
+         } else {
 
-            $date = date('Y-m-d');
-            //sumo 30 días
-            $date_30 = date("Y-m-d", strtotime($date . "+15 days"));
-            
-            // pendiente validacion            
+            Alert::error('Error', 'Ha ocurrido un erro al registrar la actualización de la solicitud');
+            return redirect()->route('interior.eventos.index');
+         }
+      } elseif ($request->estado_solicitud == 'APROBADA') {
 
+         $this->validate($request, [
+            "observaciones_solicitud" => 'required',
+            "estado_solicitud" => 'required',
+            "documento_respuesta" => 'required'
+         ]);
 
-            $detalleCorreo = [
-                'nombres' => $responsable,
-                'mensaje' => $request->observaciones_solicitud,
-                'Subject' => 'Documentos Pendientes Solicitud de Permisos para Espectaculos Públicos N°' . $datos->radicado,
-                'documento' => 'NO',
-                'fecha_pendiente' => $date_30,
-                'radicado'  => $datos->radicado,
-                'estado' => $request->estado_solicitud,
-                'id'=> Crypt::encrypt($request->id)
-            ];
+         $date = date('Y-m-d');
+         $date_30 = null;
 
-            // actualizar datos
-            $datos->estado_solicitud = $request->estado_solicitud;
-            $datos->observaciones_solicitud = $request->observaciones_solicitud;
-            $datos->fecha_actuacion = $date;
-            $datos->fecha_pendiente = $date_30;
-            $datos->act_documentos = null;
+         //mover documento a storage
+         $adjunto1 = $request->file('documento_respuesta')->storeAs('documentos_eventos/' . $datos->radicado, 'Acto_Administrativo_solicitud_No-' . $datos->radicado . '.pdf');
 
-            if ($datos->save()) {
+         //crear ruta de guardado
+         $ruta_guardado = 'storage/documentos_eventos/' . $datos->radicado . '/Acto_Administrativo_solicitud_No-' . $datos->radicado . '.pdf';
 
-                //auditoria
-                $auditoria = Auditoria::create([
-                    'usuario' => $request->username,
-                    'proceso_afectado' => 'Radicado-' . $datos->radicado,
-                    'tramite'=>'PERMISOS PARA ESPECTACULOS PUBLICOS',
-                    'radicado'=> $datos->radicado,
-                    'accion' => 'update a estado ' . $request->estado_solicitud,
-                    'observacion'=>$request->observaciones_solicitud
+         $detalleCorreo = [
+            'nombres' => $responsable,
+            'mensaje' => $request->observaciones_solicitud,
+            'Subject' => 'Solicitud Aprobada N°' . $datos->radicado,
+            'documento' => 'SI',
+            'fecha_pendiente' => $date_30,
+            'radicado'  => $datos->radicado,
+            'estado' => $request->estado_solicitud,
 
-                ]);
+         ];
 
-                Mail::to($datos->email_responsable)->queue(new NotificacionEventos($detalleCorreo));
-                Alert::success('Operacion Exitosa', 'Se ha actualizado exitosamente el estado del tramite en el sistema');
-                return redirect()->route('interior.eventos.index');
-            } else {
-
-                Alert::error('Error', 'Ha ocurrido un erro al registrar la actualización de la solicitud');
-                return redirect()->route('interior.eventos.index');
-            }
-        }elseif ($request->estado_solicitud == 'APROBADA'){
-
-            $this->validate($request, [
-                "observaciones_solicitud" => 'required',
-                "estado_solicitud" => 'required',
-                "documento_respuesta" => 'required'
-            ]);
-
-            $date = date('Y-m-d');
-            $date_30 = null;
-
-            //mover documento a storage
-            $adjunto1 = $request->file('documento_respuesta')->storeAs('documentos_eventos/' . $datos->radicado, 'Acto_Administrativo_solicitud_No-' . $datos->radicado . '.pdf');
-
-            //crear ruta de guardado
-            $ruta_guardado = 'storage/documentos_eventos/' . $datos->radicado . '/Acto_Administrativo_solicitud_No-' . $datos->radicado . '.pdf';
-            
-            $detalleCorreo = [
-                'nombres' => $responsable,
-                'mensaje' => $request->observaciones_solicitud,
-                'Subject' => 'Solicitud Aprobada N°' . $datos->radicado,
-                'documento' => 'SI',
-                'fecha_pendiente' => $date_30,
-                'radicado'  => $datos->radicado,
-                'estado' => $request->estado_solicitud,
-
-            ];
-
-            if ($adjunto1) {
-                // actualizar
-
-                $datos->estado_solicitud = $request->estado_solicitud;
-                $datos->observaciones_solicitud = $request->observaciones_solicitud;
-                $datos->fecha_actuacion = $date;
-                $datos->adjunto_respuesta = $ruta_guardado;
-                $datos->fecha_pendiente = null;
-                $datos->act_documentos = null;
-
-                if ($datos->save()) {
-
-                    $auditoria = Auditoria::create([
-                        'usuario' => $request->username,
-                        'proceso_afectado' => 'Radicado-' . $datos->radicado,
-                        'tramite'=>'PERMISOS PARA ESPECTACULOS PUBLICOS',
-                        'radicado'=> $datos->radicado,
-                        'accion' => 'update estado ' . $request->estado_solicitud,
-                        'observacion'=> $request->observaciones_solicitud
-
-                    ]);
-
-                    Mail::to($datos->email_responsable)->queue(new NotificacionEventos($detalleCorreo));
-                    Alert::success('Operacion Exitosa', 'Se actualizado exitosamente el estado del tramite en el sistema');
-                    return redirect()->route('interior.eventos.index');
-                } else {
-
-                    Alert::error('Error', 'Ha ocurrido un error al registrar la actualizacion de la solicitud');
-                    return redirect()->route('interior.eventos.index');
-                }
-            } else {
-
-                Alert::error('Error', 'Ocurrio un error al cargar el archivo al servidor');
-                return redirect()->route('interior.eventos.index');
-            }
-
-
-
-        }elseif($request->estado_solicitud == 'RECHAZADA'){
-
-            $this->validate($request, [
-                "observaciones_solicitud" => 'required',
-                "estado_solicitud" => 'required',
-                "documento_respuesta" => 'required'
-            ]);
-
-            // fecha de actuacion
-            $date = date('Y-m-d');
-
-            $date_30 = null;
-
-             //mover documento a storage
-             $adjunto1 = $request->file('documento_respuesta')->storeAs('documentos_eventos/' . $datos->radicado, 'Acto_Administrativo_solicitud_No-' . $datos->radicado . '.pdf');
-
-             //crear ruta de guardado
-             $ruta_guardado = 'storage/documentos_eventos/' . $datos->radicado . '/Acto_Administrativo_solicitud_No-' . $datos->radicado . '.pdf';
-             
-
-            $detalleCorreo = [
-                'nombres' => $responsable,
-                'mensaje' => $request->observaciones_solicitud,
-                'Subject' => 'Solicitud Rechazada N°' . $datos->radicado,
-                'documento' => 'SI',
-                'fecha_pendiente' => $date_30,
-                'radicado'  => $datos->radicado,
-                'estado' => $request->estado_solicitud
-            ];
-
-            if ($adjunto1) {
+         if ($adjunto1) {
+            // actualizar
 
             $datos->estado_solicitud = $request->estado_solicitud;
             $datos->observaciones_solicitud = $request->observaciones_solicitud;
@@ -959,34 +894,93 @@ class InteriorController extends Controller
 
             if ($datos->save()) {
 
-                //auditoria
-                $auditoria = Auditoria::create([
-                    'usuario' => $request->username,
-                    'proceso_afectado' => 'Radicado-' . $datos->radicado,
-                    'tramite'=>'PERMISOS PARA ESPECTACULOS PUBLICOS',
-                    'radicado'=> $datos->radicado,
-                    'accion' => 'update a estado ' . $request->estado_solicitud,
-                    'observacion'=>$request->observaciones_solicitud
+               $auditoria = Auditoria::create([
+                  'usuario' => $request->username,
+                  'proceso_afectado' => 'Radicado-' . $datos->radicado,
+                  'tramite' => 'PERMISOS PARA ESPECTACULOS PUBLICOS',
+                  'radicado' => $datos->radicado,
+                  'accion' => 'update estado ' . $request->estado_solicitud,
+                  'observacion' => $request->observaciones_solicitud
 
-                ]);
+               ]);
 
-                Mail::to($datos->email_responsable)->queue(new NotificacionEventos($detalleCorreo));
-                Alert::success('Operacion Exitosa', 'Se ha actualizado exitosamente el estado del tramite en el sistema');
-                return redirect()->route('interior.eventos.index');
+               Mail::to($datos->email_responsable)->queue(new NotificacionEventos($detalleCorreo));
+               Alert::success('Operacion Exitosa', 'Se actualizado exitosamente el estado del tramite en el sistema');
+               return redirect()->route('interior.eventos.index');
             } else {
 
-                Alert::error('Error', 'Ha ocurrido un erro al registrar la actualización de la solicitud');
-                return redirect()->route('interior.eventos.index');
+               Alert::error('Error', 'Ha ocurrido un error al registrar la actualizacion de la solicitud');
+               return redirect()->route('interior.eventos.index');
             }
+         } else {
 
-         }else{            
             Alert::error('Error', 'Ocurrio un error al cargar el archivo al servidor');
             return redirect()->route('interior.eventos.index');
+         }
+      } elseif ($request->estado_solicitud == 'RECHAZADA') {
 
-             }
-        }
-    }
+         $this->validate($request, [
+            "observaciones_solicitud" => 'required',
+            "estado_solicitud" => 'required',
+            "documento_respuesta" => 'required'
+         ]);
+
+         // fecha de actuacion
+         $date = date('Y-m-d');
+
+         $date_30 = null;
+
+         //mover documento a storage
+         $adjunto1 = $request->file('documento_respuesta')->storeAs('documentos_eventos/' . $datos->radicado, 'Acto_Administrativo_solicitud_No-' . $datos->radicado . '.pdf');
+
+         //crear ruta de guardado
+         $ruta_guardado = 'storage/documentos_eventos/' . $datos->radicado . '/Acto_Administrativo_solicitud_No-' . $datos->radicado . '.pdf';
 
 
+         $detalleCorreo = [
+            'nombres' => $responsable,
+            'mensaje' => $request->observaciones_solicitud,
+            'Subject' => 'Solicitud Rechazada N°' . $datos->radicado,
+            'documento' => 'SI',
+            'fecha_pendiente' => $date_30,
+            'radicado'  => $datos->radicado,
+            'estado' => $request->estado_solicitud
+         ];
 
+         if ($adjunto1) {
+
+            $datos->estado_solicitud = $request->estado_solicitud;
+            $datos->observaciones_solicitud = $request->observaciones_solicitud;
+            $datos->fecha_actuacion = $date;
+            $datos->adjunto_respuesta = $ruta_guardado;
+            $datos->fecha_pendiente = null;
+            $datos->act_documentos = null;
+
+            if ($datos->save()) {
+
+               //auditoria
+               $auditoria = Auditoria::create([
+                  'usuario' => $request->username,
+                  'proceso_afectado' => 'Radicado-' . $datos->radicado,
+                  'tramite' => 'PERMISOS PARA ESPECTACULOS PUBLICOS',
+                  'radicado' => $datos->radicado,
+                  'accion' => 'update a estado ' . $request->estado_solicitud,
+                  'observacion' => $request->observaciones_solicitud
+
+               ]);
+
+               Mail::to($datos->email_responsable)->queue(new NotificacionEventos($detalleCorreo));
+               Alert::success('Operacion Exitosa', 'Se ha actualizado exitosamente el estado del tramite en el sistema');
+               return redirect()->route('interior.eventos.index');
+            } else {
+
+               Alert::error('Error', 'Ha ocurrido un erro al registrar la actualización de la solicitud');
+               return redirect()->route('interior.eventos.index');
+            }
+         } else {
+            Alert::error('Error', 'Ocurrio un error al cargar el archivo al servidor');
+            return redirect()->route('interior.eventos.index');
+         }
+      }
+   }
 }

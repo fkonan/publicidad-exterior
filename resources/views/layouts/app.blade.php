@@ -351,7 +351,7 @@
    <script type="text/javascript" src="{{ asset('js/utils.js') }}"></script>
    <script type="text/javascript" src="{{ asset('js/dadep.js') }}"></script>
    <script type="text/javascript" src="{{ asset('js/publicidad_exterior.js') }}"></script>
-
+   @stack('scripts')
 
 
 

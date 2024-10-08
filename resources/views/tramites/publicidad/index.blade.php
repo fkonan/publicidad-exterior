@@ -2,18 +2,9 @@
 @section('title', 'Registro de publicidad exterior visual')
 @section('content')
 
-<style>
-   .clockpicker-button {
-      background-color: #3366CC !important;
-      color: white !important;
-   }
-</style>
-
-<meta name="csrf-token" content="{{ csrf_token() }}">
-<div class="container mb-4 m-xs-x-3" id="body_eventos">
+<div class="container" id="body_eventos">
    @include('tramites.titulo')
 
-   <div class="container-fluid">
       <div class="row mt-2">
          <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
 
@@ -34,7 +25,6 @@
             @include('tramites.publicidad.informativo')
          </div>
       </div>
-   </div>
 </div>
 @include('tramites.publicidad.form_consulta')
 

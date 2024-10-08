@@ -11,20 +11,16 @@ class Publicidad extends Model
 
    protected $fillable = [
       "radicado",
+      "PersonaId",
       "modalidad",
-      "sub_modalidad",
       "tipo_publicidad",
-      "publicidad_instalada",
-      "fecha_instalacion",
+      "fecha_renovacion",
+      "fecha_vencimiento",
       "numero_elementos",
+      "esquinero",
       "estado_solicitud",
-      "observacion_solicitud",
-      "fecha_actuacion",
-      "fecha_pendiente_planeacion",
-      "fecha_pendiente_salud",
-      "fecha_pendiente_transito",
-      "fecha_pendiente_ciudadano",
-      "act_documentos",
+      "novedad",
+      "dependencia",
       "tratamiento_datos",
       "acepto_terminos",
       "confirmo_mayorEdad",
@@ -33,6 +29,50 @@ class Publicidad extends Model
       "updated_at"
    ];
 
+
+   public static function getRadicados($modalidad, $dependencia)
+   {
+      if ($modalidad == 'TODAS') {
+         $sql = "SELECT
+         pe.id,
+         radicado,
+         pe.PersonaId,
+         per.PersonaTip,
+         per.PersonaDoc,
+         per.PersonaNombre,
+         per.PersonaApe,
+         per.PersonaRazon,
+         tipo_publicidad,
+         fecha_vencimiento,
+         estado_solicitud,
+         novedad,
+         dependencia
+         FROM publicidad_exterior AS pe
+         INNER JOIN personas AS per ON pe.PersonaId=per.PersonaId
+         WHERE dependencia='$dependencia' and estado_solicitud<>'finalizado'";
+         return $sql;
+      } else {
+
+         $sql = "SELECT
+         pe.id,
+         radicado,
+         pe.PersonaId,
+         per.PersonaTip,
+         per.PersonaDoc,
+         per.PersonaNombre,
+         per.PersonaApe,
+         per.PersonaRazon,
+         tipo_publicidad,
+         fecha_vencimiento,
+         estado_solicitud,
+         novedad,
+         dependencia
+         FROM publicidad_exterior AS pe
+         INNER JOIN personas AS per ON pe.PersonaId=per.PersonaId
+         WHERE modalidad='$modalidad' AND dependencia='$dependencia' and estado_solicitud<>'finalizado'";
+      }
+      return $sql;
+   }
 
    public static function SqlEstado($estado, $modalidad, $dep = "INTERIOR")
    {

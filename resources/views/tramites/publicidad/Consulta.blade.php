@@ -25,7 +25,6 @@
         <div class="row mt-2">
             <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
 
-                @include('tramites.publicidad.Introduccion')
 
                 <h3 class="headline-l-govco mt-3 pl-0">Publicidad exterior visual</h3>
 
@@ -67,13 +66,14 @@
 
                     <tr>
                         <td>Estado de la solicitud:</td>
-                        <td class="@if($Solicitud->estado_solicitud=='APROBADA'){{'text-success font-bold'}}@else{{''}}@endif">{{ $Solicitud->estado_solicitud }}</td>
+                        <td class="@if($Solicitud->estado_solicitud=='APROBADA'){{'text-success font-bold'}}@else{{''}}@endif">{{ $Solicitud->novedad }}</td>
 
                     </tr>
                     <tr>
                         <td>Dependencia:</td>
                         <td class="font-bold">{{ $Solicitud->dependencia }}</td>
                     </tr>
+
 
                     @if (isset($documento))
                     <tr style="background-color:#004884">
@@ -83,13 +83,11 @@
                     <tr>
                         <td colspan="3">
                             <div class="row">
-                                @foreach ($documento as $documento)
-                                <div class="col-xs-12 col-md-6 col-xl-4">
-                                    <label>{{ $documento->DocTitulo }}:</label><br>
-                                    <a href="/{{ $documento->DocRuta }}"" target=" _blank">Descargar
+                                <div class="col-xs-12 col-md-6 col-xl-6">
+                                    <label>{{ $documento->nombre_adjunto }}:</label><br>
+                                    <a href="{{asset('storage/' .$documento->ruta)}}" target=" _blank">Descargar
                                         documento</a>&nbsp;&nbsp;<i class="fa fa-download"></i>
                                 </div>
-                                @endforeach
                             </div>
                         </td>
                     </tr>

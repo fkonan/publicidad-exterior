@@ -19,6 +19,7 @@ use App\PublicidadAdjunto;
 use App\PublicidadLiquidacion;
 use App\Publicidad;
 use App\Mail\MailDadep;
+use App\PublicidadNovedad;
 use App\PublicidadParamAdjuntos;
 use Dotenv\Exception\ValidationException;
 
@@ -28,7 +29,6 @@ class PublicidadController extends Controller
 {
    public function index()
    {
-
       return view('tramites.publicidad.index');
    }
 
@@ -120,93 +120,144 @@ class PublicidadController extends Controller
 
    public function finalizar(Request $request)
    {
-      $personas = Persona::find($request->PersonaId);
+      DB::beginTransaction();
 
-      $modalidades = array(
-         "VALLAS",
-         "PENDONES",
-         "MURALES",
-         "PASACALLES",
-         "PUBLICIDAD AEREA",
-         "MOVIL",
-         "AVISOS DE IDENTIFICACION DE ESTABLECIMIENTOS COMERCIALES",
-         "IDENTIFICACION PROYECTOS INMOBOLIARIOS",
-         "AVISOS TIPO COLOMBINA"
-      );
-      $modalidades[""] = "";
-      $modalidades[$request->modalidad];
-      //Creando o actualizando solicitud-------------------
-      $publicidad = new Publicidad();
-      $publicidad->PersonaId = $personas->PersonaId;
-      $publicidad->modalidad = $modalidades[$request->modalidad];
-      $publicidad->tipo_publicidad =  $request->tipo_publicidad;
-      $publicidad->numero_elementos =  $request->numero_elementos;
-      $publicidad->observacion_solicitud =  $request->observacion_medidas;
-      $publicidad->tratamiento_datos =  $request->tratamiento_datos;
-      $publicidad->acepto_terminos = $request->acepto_terminos;
-      $publicidad->confirmo_mayorEdad = $request->confirmo_mayorEdad;
-      $publicidad->compartir_informacion = $request->compartir_informacion;
-      $publicidad->estado_solicitud = "ENVIADA";
-      $publicidad->dependencia = "INTERIOR";
+      try {
 
-      //Creando radicado
-      $y = date("Y");
-      $m = date("m");
-      $sql = "select count(id) as Cantidad from publicidad_exterior Where ( YEAR(created_at)=$y)";
-      $obj = DB::select($sql);
-      $id = $obj[0]->Cantidad + 1;
-      $id = 10000000 + $id;
-      $id = "$id";
+         $modalidad = $request->publicidad_modalidad;
+         $personas = Persona::find($request->PersonaId);
+         $publicidad = new Publicidad();
+         //Creando radicado
+         $y = date("Y");
+         $m = date("m");
+         $sql = "select count(id) as Cantidad from publicidad_exterior Where ( YEAR(created_at)=$y)";
+         $obj = DB::select($sql);
+         $id = $obj[0]->Cantidad + 1;
+         $id = 10000000 + $id;
+         $id = "$id";
 
-      $publicidad->radicado = $y . "-" . $m . "-" . substr($id, -3);
-      $publicidad->save();
+         $publicidad->radicado = $id;
+         $publicidad->PersonaId = $personas->PersonaId;
+         $publicidad->modalidad = $modalidad;
+         $publicidad->tipo_publicidad =  $request->tipo_publicidad;
+         $publicidad->fecha_renovacion =  $request->fecha_renovacion;
+         $publicidad->fecha_vencimiento =  $request->fecha_vencimiento;
 
-      $request->request->add([
-         'radicado' => $publicidad->radicado,
-         'NovedadTipo' => ""
-      ]);
+         $publicidad->numero_elementos = $request->input($modalidad . "_numero_elementos");
+         $publicidad->esquinero = $request->input($modalidad . "_esquinero");
+         $publicidad->estado_solicitud = "radicado";
+         $publicidad->novedad = "Revisión de documentos radicados";
+         $publicidad->dependencia = "interior";
 
-      if ($publicidad->id > 0) {
+         $publicidad->tratamiento_datos =  $request->tratamiento_datos;
+         $publicidad->acepto_terminos = $request->acepto_terminos;
+         $publicidad->confirmo_mayorEdad = $request->confirmo_mayorEdad;
+         $publicidad->compartir_informacion = $request->compartir_informacion;
+
+         $publicidad->radicado = $y . "-" . $m . "-" . substr($id, -3);
+         $publicidad->save();
+
          $detalle = new Publicidaddetalle;
-         $detalle->tipo_valla = $request->tipo_valla;
-         $detalle->alto_publicidad = $request->alto_publicidad;
-         $detalle->ancho_publicidad = $request->ancho_publicidad;
-         $detalle->numero_caras = $request->numero_caras;
-         $detalle->area_total = $request->area_total;
-         $detalle->ubicacion_aviso = $request->ubicacion_aviso;
+         $detalle = new Publicidaddetalle;
          $detalle->publicidad_id = $publicidad->id;
-         $detalle->save();
+         $detalle->tipo_valla = $request->input($modalidad . "_tipo_valla", null);
+
+         if ($publicidad->id > 0) {
+            $detalle = new Publicidaddetalle;
+            $detalle->publicidad_id = $publicidad->id;
+            $detalle->tipo_valla = $request->input($modalidad . "_tipo_valla", null);
+
+            for ($i = 1; $i <= $publicidad->numero_elementos; $i++) {
+               $detalle->numero_caras = $request->input($modalidad . "_numero_caras" . $i, null);
+               $detalle->alto_elemento = $request->input($modalidad . "_alto_elemento" . $i, null);
+               $detalle->ancho_elemento = $request->input($modalidad . "_ancho_elemento" . $i, null);
+               $detalle->numero_caras = $request->input($modalidad . "_numero_caras" . $i, null);
+               $detalle->area_total_elemento = $request->input($modalidad . "_area_total_elemento" . $i, null);
+               $detalle->ancho_fachada = $request->input($modalidad . "_ancho_fachada" . $i, null);
+               $detalle->alto_fachada = $request->input($modalidad . "_alto_fachada" . $i, null);
+               $detalle->area_total_fachada = $request->input($modalidad . "_area_total_fachada" . $i, null);
+               $detalle->descripcion_elemento = $request->input($modalidad . "_descripcion_elemento" . $i, null);
+               $detalle->direccion_elemento = $request->input($modalidad . "_direccion_elemento" . $i, null);
+               $detalle->caracteristicas_vehiculo = $request->input($modalidad . "_caracteristicas_vehiculo" . $i, null);
+               $detalle->tipo_vehiculo = $request->input($modalidad . "_tipo_vehiculo" . $i, null);
+               $detalle->placa_vehiculo = $request->input($modalidad . "_placa_vehiculo" . $i, null);
+               $detalle->save();
+            }
+         }
+
+         $folder = 'documentos_publicidad/' . $publicidad->radicado;
+
+         foreach ($request->allFiles() as $key => $file) {
+            $documentos = PublicidadAdjunto::where('radicado', $publicidad->radicado)->where('codigo_adjunto', $key)->get();
+            $nombre_adjunto = PublicidadParamAdjuntos::where('codigo_adjunto', $key)->where('modalidad', $modalidad)->first();
+
+            if ($documentos->count() == 0) {
+               $documento = new PublicidadAdjunto;
+               $documento->publicidad_id = $publicidad->id;
+               $documento->codigo_adjunto = $key;
+               $documento->nombre_adjunto = $nombre_adjunto->titulo_adjunto;
+               $documento->ruta = $folder . '/' . $key . ".pdf";
+               $documento->radicado = $publicidad->radicado;
+               $documento->save();
+
+               $file->storeAs($folder, $key . ".pdf");
+            }
+         }
+
+         $novedades = new PublicidadNovedad();
+         $novedades->NovedadTipo = 'radicado';
+         $novedades->NovedadComentario = 'Radicación de solicitud';
+         $novedades->NovedadEstado = 'radicado';
+         $novedades->SolicitudId = $publicidad->id;
+         $novedades->save();
+
+         DB::commit();
+      } catch (\Exception $e) {
+         DB::rollBack();
+         throw $e;
       }
 
-      $docs = [];
-      foreach ($request->allFiles() as $key => $file) {
-         $docs[] = $key;
-      }
-
-      PublicidadAdmin::CargarDoc($request, $docs, $publicidad->radicado, $publicidad->id);
-      PublicidadAdmin::sendMail($personas, $request, 'tramites.PublicidadAdmin.CorreoSol', false);
-
-      return view('tramites.publicidad.ResSol', compact('request'));
+      // PublicidadAdmin::sendMail($personas, $request, 'tramites.PublicidadAdmin.CorreoSol', false);
+      // return view('tramites.publicidad.ResSol', compact($publicidad->radicado));
+      return view('tramites.publicidad.ResSol', ['radicado' => $publicidad->radicado]);
    }
 
    public function consulta(Request $request)
    {
-
       $Qs = Publicidad::where($request->tipo_parametro, $request->parametro)->get();
       //dd($Qs);
       if ($Qs->count() > 0) {
          $array = $Qs->getDictionary();
          $Solicitud = reset($array);
+
+         $estado = DB::select("SELECT pce.id AS estado_id,pcn.id AS novedad_id,titulo_estado,adj_ciudadano
+         FROM publicidad_config_estados AS pce
+         INNER JOIN publicidad_config_novedades AS pcn ON pce.id=pcn.estado_id
+         WHERE modalidad='$Solicitud->modalidad' AND estado='$Solicitud->estado_solicitud'; ");
+
+         $adjuntos = [];
+         if (count($estado) > 0) {
+
+
+            if ($estado[0]->adj_ciudadano == 1) {
+               $adjuntos = DB::select("SELECT id,codigo_adjunto,titulo_adjunto
+            FROM publicidad_config_adjuntos
+            WHERE modalidad='$Solicitud->modalidad' AND ciudadano=1;");
+            }
+         }
+
          $Persona = Persona::Find($Solicitud->PersonaId);
          $documento = null;
          $liquidacion = null;
-         if ($Solicitud->estado_solicitud == 'APROBADA') {
-            $documento = PublicidadAdjunto::where("publicidad_id", $Solicitud->id)->where("DocTitulo", "Acto administrativo")->get();
+
+         if ($Solicitud->estado_solicitud == 'finalizado') {
+            $documento = PublicidadAdjunto::where("publicidad_id", $Solicitud->id)->where("codigo_adjunto", "generar_acto")->first();
          }
+
          if ($Solicitud->estado_solicitud == 'PENDIENTE' && $Solicitud->dependencia == 'HACIENDA') {
             $liquidacion = PublicidadLiquidacion::where("publicidad_id", $Solicitud->id)->whereNull("fecha_pago")->get();
          }
-         return view('tramites.publicidad.Consulta', compact('Solicitud', 'Persona', 'documento', 'liquidacion'));
+         return view('tramites.publicidad.Consulta', compact('Solicitud', 'Persona', 'documento', 'liquidacion', 'adjuntos', 'estado'));
       } else {
          Alert::error('Ha Ocurrido un error', 'El Numero: .' . $request->parametro . ' no tiene registros asociados');
          return redirect()->route('publicidad.index');
@@ -230,15 +281,28 @@ class PublicidadController extends Controller
    {
 
       $Qs = Publicidad::where("radicado", $request->Radicado)->get();
+
       if ($Qs->count() > 0) {
          $array = $Qs->getDictionary();
          $Solicitud = reset($array);
-         if ($Solicitud->estado_solicitud == "PENDIENTE") {
+
+         $estado = DB::select("SELECT pce.id AS estado_id,pcn.id AS novedad_id,titulo_estado,adj_ciudadano,estado_sig
+         FROM publicidad_config_estados AS pce
+         INNER JOIN publicidad_config_novedades AS pcn ON pce.id=pcn.estado_id
+         WHERE modalidad='$Solicitud->modalidad' AND estado='$Solicitud->estado_solicitud'; ");
+
+         $adjuntos = [];
+         if ($estado[0]->adj_ciudadano == 1) {
+            $adjuntos = DB::select("SELECT id,codigo_adjunto,titulo_adjunto
+            FROM publicidad_config_adjuntos
+            WHERE modalidad='$Solicitud->modalidad' AND ciudadano=1;");
+         }
+
+         if ($Solicitud->dependencia == "ciudadano") {
             $Datos = Persona::Find($Solicitud->PersonaId);
-            $Datos->TituloApp = "publicidad-exterior";
-            return view('tramites.publicidad.DocPendientes', compact('Solicitud', 'Datos'));
+            return view('tramites.publicidad.DocPendientes', compact('Solicitud', 'Datos', 'estado', 'adjuntos'));
          } else {
-            Alert::warning('Lo sentimos', 'El Numero: .' . $request->Radicado . ' no tiene documentos pendientes');
+            Alert::warning('Lo sentimos', 'El Número: .' . $request->Radicado . ' no tiene documentos pendientes');
             return redirect()->route('publicidad.index');
          }
       } else {
@@ -253,21 +317,63 @@ class PublicidadController extends Controller
       if ($Qs->count() > 0) {
          $array = $Qs->getDictionary();
          $Solicitud = reset($array);
-         $Solicitud->estado_solicitud = "EN PROGRESO";
-         $Solicitud->save();
-         $Datos = Persona::Find($Solicitud->PersonaId);
-         $req->SolicitudId = $Solicitud->id;
-      }
-      $docs = array(
-         "Tarjeta profesional",
-         "Poliza",
-         "Otro"
-      );
-      $Datos->TituloApp = "publicidad exterior visual";
-      PublicidadAdmin::CargarDoc($req, $docs, $req->Radicado);
-      PublicidadAdmin::sendMail($Datos, $Solicitud, 'emails.notificacion_publicidad', 'emails.funcionario_publicidad');
+         $solicitud = Publicidad::Find($Solicitud->id);
 
-      return view('tramites.publicidad.ResDocPendientes', compact('Solicitud', 'Datos'));
+         DB::beginTransaction();
+
+         try {
+
+            $config_novedad = DB::select("SELECT estado,titulo_estado,dependencia,novedad,opcion,estado_sig FROM publicidad_config_estados pce
+            INNER JOIN publicidad_config_novedades AS pcn ON pce.id=pcn.estado_id  WHERE pcn.id=$req->novedad_id LIMIT 1;");
+
+            $estado_sig = $config_novedad[0]->estado_sig;
+
+            $estado_siguiente = DB::select("SELECT estado,titulo_estado,dependencia,novedad,opcion,estado_sig FROM publicidad_config_estados pce
+            INNER JOIN publicidad_config_novedades AS pcn ON pce.id=pcn.estado_id  WHERE pce.id=$estado_sig LIMIT 1;");
+
+            $novedad = new PublicidadNovedad();
+            $novedad->NovedadTipo = $config_novedad[0]->opcion;
+            $novedad->NovedadComentario = $config_novedad[0]->novedad;
+            $novedad->NovedadEstado = $config_novedad[0]->estado;
+            $novedad->FuncionarioId = 1;
+            $novedad->SolicitudId = $Solicitud->id;
+            $novedad->save();
+
+            $solicitud->estado_solicitud = $estado_siguiente[0]->estado;
+            $solicitud->dependencia = $estado_siguiente[0]->dependencia;
+            $solicitud->novedad = $estado_siguiente[0]->novedad;
+
+            $solicitud->save();
+
+            $folder = 'documentos_publicidad/' . $solicitud->radicado;
+
+            foreach ($req->allFiles() as $key => $file) {
+               $documentos = PublicidadAdjunto::where('radicado', $solicitud->radicado)->where('codigo_adjunto', $config_novedad[0]->estado)->get();
+               $nombre_adjunto = DB::select("SELECT titulo_adjunto FROM `publicidad_config_adjuntos` WHERE modalidad='$solicitud->modalidad' AND codigo_adjunto='$key';");
+               if ($documentos->count() == 0) {
+                  $documento = new PublicidadAdjunto;
+                  $documento->publicidad_id = $solicitud->id;
+                  $documento->codigo_adjunto = $key;
+                  $documento->nombre_adjunto = $nombre_adjunto[0]->titulo_adjunto;
+                  $documento->ruta = $folder . '/' . $key . ".pdf";
+                  $documento->radicado = $solicitud->radicado;
+                  $documento->save();
+
+                  $file->storeAs($folder, $key . ".pdf");
+               }
+            }
+
+            DB::commit();
+         } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+         }
+      }
+
+
+      //PublicidadAdmin::sendMail($Datos, $Solicitud, 'emails.notificacion_publicidad', 'emails.funcionario_publicidad');
+
+      return view('tramites.publicidad.ResDocPendientes', compact('Solicitud'));
    }
 }
 

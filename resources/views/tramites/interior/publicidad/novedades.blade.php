@@ -3,15 +3,15 @@
    <td colspan="3" style="background-color:#004884; color:white">Novedades</td>
 </tr>
 <tr>
-   <th>Tipo de Novedad</th>
-   <th>Observaciones</th>
+   <th>Novedad</th>
    <th>Estado</th>
+   <th>Observaciones</th>
 </tr>
 @foreach ($novedades as $novedad)
 <tr>
-   <td>{{ $novedad->NovedadTipo }}</td>
-   <td>{{ $novedad->NovedadComentario }}</td>
-   <td>{{ $novedad->NovedadEstado}} | {{$novedad->created_at }}</td>
+   <td>{{ $novedad->NovedadEstado}} </td>
+   <td>{{ $novedad->NovedadTipo }}  </td>
+   <td>{{ $novedad->NovedadComentario }} | {{$novedad->created_at }}</td>
 </tr>
 @endforeach
 @endif
@@ -37,102 +37,17 @@ return $novedad->NovedadTipo === 'Revision de documentos';
 @endphp
 <tr>
    <td>
+      <h3>Estado actual de la solicitud: </h3>
+      <h4>{{$config_novedades[0]->titulo_estado}}</h4>
       <div class="form-group">
-         <label for="estado">Tipo de novedad* </label>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror" name="tiponovedad"
-            id="tiponovedad" required onchange="javascript:cambiarEstado(this.value);">
-            <option value="">Seleccione</option>
-
-            @if ($solicitud->dependencia == 'INTERIOR')
-               @if (!$revisionDocumentos)
-               <option value="1">Revision de documentos</option>
-               @endif
-
-               @if ($solicitud->modalidad != 'PASACALLES')
-               <option value="5">Presentación de requisitos finales</option>
-               @endif
-
-               @if ($solicitud->modalidad == 'VALLAS')
-               <option value="6">Revisión documentos finales</option>
-               @endif
-
-               <option value="8">Acto administrativo</option>
-            @endif
-
-            @if ($solicitud->dependencia == 'PLANEACION')
-            <option value="2">Concepto tecnico planeación</option>
-            @endif
-            @if ($solicitud->dependencia == 'TRANSITO')
-            <option value="3">Concepto tecnico transito</option>
-            @endif
-            @if ($solicitud->dependencia == 'SALUD')
-            <option value="4">concepto tecnico salud</option>
-            @endif
-            @if ($solicitud->dependencia == 'HACIENDA')
-            <option value="7">Liquidacion</option>
-            @endif
+         <label for="novedad">{{$config_novedades[0]->novedad}} *</label>
+         <select class="form-control  @error('novedad') is-invalid @enderror" name="novedad" id="novedad" required>
+            <option value="">Seleccione una opción</option>
+            @foreach ($config_novedades as $novedad)
+            <option value="{{$novedad->novedad_id}}">{{$novedad->opcion}}
+            @endforeach
          </select>
-         @error('estado_solicitud')
-         <span class="invalid-feedback" role="alert">
-            <strong class="text-danger">{{ $message }}</strong>
-         </span>
-         @enderror
-      </div>
-      <div class="form-group">
-         <label for="estado">Estado de la novedad*</label>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado" name="Novedad[0]"
-            id="estado0">
-            <option value="">Seleccione</option>
-         </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[1]"
-            id="estado1">
-            <option value="COMPLETO">COMPLETO</option>
-            <option value="INCOMPLETO">INCOMPLETO</option>
-            <option value="RECHAZADO">RECHAZADO</option>
-         </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[2]"
-            id="estado2">
-            <option value="FAVORABLE">FAVORABLE</option>
-            <option value="NO FAVORABLE">NO FAVORABLE</option>
-         </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[3]"
-            id="estado3">
-            <option value="FAVORABLE">FAVORABLE</option>
-            <option value="NO FAVORABLE">NO FAVORABLE</option>
-         </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[4]"
-            id="estado4">
-            <option value="FAVORABLE">FAVORABLE</option>
-            <option value="NO FAVORABLE">NO FAVORABLE</option>
-         </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[5]"
-            id="estado5">
-            <option value="VIABLE">VIABLE</option>
-            <option value="NO VIABLE">NO VIABLE</option>
-         </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[6]"
-            id="estado6">
-            <option value="COMPLETO">COMPLETO</option>
-            <option value="INCOMPLETO">INCOMPLETO</option>
-         </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[7]"
-            id="estado7">
-            <option value="LIQUIDADO">LIQUIDADO</option>
-         </select>
-         <select class="form-control  @error('estado_solicitud') is-invalid @enderror estado d-none" name="Novedad[8]"
-            id="estado8">
-            <option value="APROBADO">APROBADO</option>
-         </select>
-
-         <script language="javascript">
-            function cambiarEstado(num) {
-               $('.estado').addClass('d-none');
-               var nombre = "#estado" + num;
-               $(nombre).removeClass('d-none');
-            }
-         </script>
-
-         @error('estado_solicitud')
+         @error('novedad')
          <span class="invalid-feedback" role="alert">
             <strong class="text-danger">{{ $message }}</strong>
          </span>
@@ -142,16 +57,15 @@ return $novedad->NovedadTipo === 'Revision de documentos';
 
    <td colspan="2">
       <div class="form-group">
-         <label for="observaciones">Observaciones*</label>
-         <textarea name="NovedadComentario" id="NovedadComentario" onkeypress="return Observaciones(event)"
-            maxlength="500" class="form-control  @error('observaciones_solicitud') is-invalid @enderror"
-            id="observaciones" cols="2" rows="4" required></textarea>
-         @error('observaciones_solicitud')
+         <label for="observacion">Observaciones</label>
+         <textarea name="observacion" id="observacion"
+         maxlength="255" class="form-control  @error('observacion') is-invalid @enderror"
+            id="observacion" cols="2" rows="4"></textarea>
+         @error('observacion')
          <span class="invalid-feedback" role="alert">
             <strong class="text-danger">{{ $message }}</strong>
          </span>
          @enderror
-
       </div>
    </td>
 </tr>
@@ -167,8 +81,8 @@ return $novedad->NovedadTipo === 'Revision de documentos';
    <td>
       <div class="form-group">
          <label for="documento_respuesta">Cargar Respuesta</label>
-         <input type="file" accept="application/pdf" name="documento0" id="documento_respuesta"
-            class="form-control @error('documento0') is-invalid @enderror" @if ($solicitud->dependencia == 'SALUD' ||
+         <input type="file" accept="application/pdf" name="documento_respuesta" id="documento_respuesta"
+            class="form-control @error('documento_respuesta') is-invalid @enderror" @if ($solicitud->dependencia == 'SALUD' ||
          $solicitud->dependencia == 'PLANEACION')
          required @endif>
          @error('documento0')

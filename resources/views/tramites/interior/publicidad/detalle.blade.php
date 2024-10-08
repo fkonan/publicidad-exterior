@@ -83,12 +83,7 @@
                      <td><strong>Modalidad de la publicidad</strong><br>
                         {{ $solicitud->modalidad }}
                      </td>
-                     @if($solicitud->sub_modalidad)
-                     <td><strong>Submodalidad</strong>
-                        <br>{{ $solicitud->sub_modalidad }}
-                     </td>
-                     @endif
-                     @if($solicitud->modalidad=='VALLAS')
+                     @if($solicitud->modalidad=='vallas')
                      <td><strong>Tipo de valla</strong>
                         <br>{{ $detalle->tipo_valla }}
                      </td>
@@ -100,10 +95,10 @@
 
                   <tr>
                      <td><strong>Alto de la publicidad</strong><br>
-                        {{ $detalle->alto_publicidad }} (mts2)
+                        {{ $detalle->alto_elemento }} (mts2)
                      </td>
                      <td><strong>Ancho de la publicidad</strong><br>
-                        {{ $detalle->ancho_publicidad }} (mts2)
+                        {{ $detalle->ancho_elemento }} (mts2)
                      </td>
                      <td><strong>No de caras</strong><br>
                         {{ $detalle->numero_caras }}
@@ -112,88 +107,32 @@
                   </tr>
                   <tr>
                      <td><strong>Área total (mts2)</strong><br>
-                        {{ $detalle->area_total }}
+                        {{ $detalle->area_total_elemento }}
                      </td>
                      <td><strong>Número de elementos</strong><br>
                         {{ $solicitud->numero_elementos }}
                      </td>
                      <td><strong>Ubicación del aviso</strong><br>
-                        {{ $detalle->ubicacion_aviso }}
+                        {{ $detalle->direccion_elemento }}
                      </td>
                   </tr>
 
-                  @switch($solicitud->modalidad)
-                  @case('MURALES')
-                  <tr>
-                     <td><strong>Fecha de fijacion de la publicidad</strong><br>
-                        {{ $detalle->fecha_inicial_fijacion }}
-                     </td>
-                     <td><strong>Fechas de retiro de la publicidad</strong><br>
-                        {{ $detalle->fecha_final_fijacion }}
-                     </td>
-                     <td></td>
-                  </tr>
-                  @break
-                  @endswitch
 
                   <tr style="background-color:#004884">
-                     <td colspan="3" style="background-color:#004884; color:white">Administración del Tramite
+                     <td colspan="32" style="background-color:#004884; color:white">Administración del Trámite
                      </td>
                   </tr>
                   <tr>
                      <td><strong>Estado de la solicitud:</strong><br>
-                        @if ($solicitud->estado_solicitud == 'ENVIADA')
-                        <p style="color: #069169;font-weight:bold">ENVIADA<span
+                        <p style="color: #069169;font-weight:bold">{{$solicitud->estado_solicitud}} <span
                               class="govco-icon govco-icon-check-p size-1x"></span></p>
-                        @elseif($solicitud->estado_solicitud == 'PENDIENTE')
-                        <p style="color: #3772FF;font-weight:bold">PENDIENTE<span
-                              class="govco-icon govco-icon-eye-p size-1x"></span></p>
-                        @elseif($solicitud->estado_solicitud == 'APROBADA')
-                        <p style="color: #069169;font-weight:bold">APROBADA<span
-                              class="govco-icon govco-icon-like size-1x"></span></p>
-                        @elseif($solicitud->estado_solicitud == 'RECHAZADA')
-                        <p style="color: #A80521;font-weight:bold">RECHAZADA<span
-                              class="govco-icon govco-icon-x-n size-1x"></span></p>
-                        @endif
+                        </p>
                      </td>
-
-                     <td colspan="2"><strong>Observaciones de la solicitud:</strong><br>
-                        @if ($solicitud->observacion_solicitud == null || $solicitud->observacion_solicitud == '')
-                           <small>No hay Observaciones</small>
-                        @else
-                        {{ $solicitud->observacion_solicitud }}
-                        @endif
-                     </td>
-                  </tr>
-                  <tr>
                      <td><strong>Fecha y hora de la solicitud</strong><br>
                         {{ $solicitud->created_at }}
                      </td>
-                     <td><strong>Fecha de actuación</strong><br>
-                        @if ($solicitud->fecha_actuacion == null || $solicitud->fecha_actuacion == '')
-                        <small>No hay fecha de actuaciones</small>
-                        @else
-                        {{ $solicitud->fecha_actuacion }}
-                        @endif
-                     </td>
                      <td></td>
                   </tr>
-                  @if ($solicitud->estado_solicitud == 'PENDIENTE' || $solicitud->estado_solicitud ==
-                  'REVISION-CONCEPTOS')
-                  <tr>
-                     @if ($solicitud->estado_solicitud == 'PENDIENTE' && $solicitud->fecha_pendiente != null)
-                     <td><strong>Fecha límite para actualizar documentos</strong><br>
-                        {{ $solicitud->fecha_pendiente }}
-                     </td>
-                     @endif
-                     @if ($solicitud->estado_solicitud == 'REVISION-PLANEACION' &&
-                     $solicitud->fecha_pendiente_planeacion != null)
-                     <td><strong>Fecha límite para concepto técnico</strong><br>
-                        {{ $solicitud->fecha_pendiente_planeacion }}
-                     </td>
-                     @endif
-                  </tr>
-                  @endif
 
                   <!-- Documentos -->
                   @include('tramites.interior.publicidad.documentos')

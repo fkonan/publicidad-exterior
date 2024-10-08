@@ -143,17 +143,6 @@ Route::get('/registro-metrolinea/detalle/{id}', 'MetrolineaController@detalle')-
 Route::post('/registro-metrolinea/updateDocs', 'MetrolineaController@updateDocs')->name('metrolinea.updateDocs');
 // RUTAS DE PUBLICIDAD EXTERIOR
 
-// Route::get('/publicidad-exterior', 'PublicidadController@index')->name('publicidad.index')->middleware('maintenance');
-// Route::get('/publicidad-exterior/inicio', 'PublicidadController@inicio')->name('publicidad.inicio')->middleware('maintenance');
-// Route::post('/publicidad-exterior/solicitud', 'PublicidadController@solicitud')->name('publicidad.solicitud');
-// Route::post('/publicidad-exterior/finalizar', 'PublicidadController@finalizar')->name('publicidad.finalizar');
-// Route::get('/publicidad-exterior/confirmacion', 'PublicidadController@confirmacion')->name('publicidad.confirmacion')->middleware('maintenance');
-// Route::get('/publicidad-exterior/finalizar', 'PublicidadController@end')->name('publicidad.finalizar')->middleware('maintenance');
-// Route::get('/publicidad-exterior/DocConsulta','PublicidadController@DocConsulta')->name('publicidad.DocConsulta')->middleware('maintenance');
-// Route::post('/publicidad-exterior/consulta','PublicidadController@consulta')->name('publicidad.consulta');
-// Route::get('/publicidad-exterior/DocPendientes','PublicidadController@DocPendientes')->name('publicidad.DocPendientes')->middleware('maintenance');
-// Route::post('/publicidad-exterior/Guardar', 'PublicidadController@Guardar')->name('publicidad.Guardar');
-
 Route::get('/publicidad-exterior', 'PublicidadController@index')->name('publicidad.index');
 
 Route::get('/publicidad-exterior/validar-documento', 'PublicidadController@validarDocumento')->name('publicidad.validarDocumento');
@@ -175,6 +164,13 @@ Route::get('/publicidad-exterior/detalle/{id}', 'PublicidadController@detalle')-
 Route::post('/publicidad-exterior/updateDocs', 'PublicidadController@updateDocs')->name('publicidad.updateDocs');
 Route::get('/publicidad-exterior/detalle-requisitos/{id}', 'PublicidadController@detalleRequisitos')->name('publicidad.detalleRequisitos');
 Route::post('/publicidad-exterior/updateReq', 'PublicidadController@updateReque')->name('publicidad.updateReq');
+
+Route::get('/publicidad-exterior/solicitud/modalidad/{modalidad}', function ($modalidad) {
+   if (view()->exists("tramites.publicidad.modalidades.$modalidad")) {
+      return view("tramites.publicidad.modalidades.$modalidad");
+   }
+   return response()->json(['error' => 'Modalidad no encontrada'], 404);
+});
 
 // RUTAS DE ENCUESTA POT
 

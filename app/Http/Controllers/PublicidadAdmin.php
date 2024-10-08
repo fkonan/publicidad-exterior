@@ -16,6 +16,7 @@ use App\Auditoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\EnvioNotificacion;
+use App\PublicidadConfigNovedades;
 use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Support\Facades\DB;
 use PDF;
@@ -42,7 +43,7 @@ class PublicidadAdmin extends Controller
       dd('dd');
    }
 
-   public function Administrar(Request $r)
+   public function Administrar($modalidad)
    {
       $tipo = $r->modalidad;
       $dep = $r->dependencia;
@@ -70,24 +71,24 @@ class PublicidadAdmin extends Controller
       return view('tramites.interior.publicidad.index1', compact('sGrupos', 'PORCERRAR', 'tipo'));
    }
 
-   public function interior(Request $r)
+   public function interior($modalidad)
    {
-      $r->dependencia = 'INTERIOR';
-      return $this->Administrar($r);
+      $solicitudes = DB::select(Publicidad::getRadicados($modalidad, 'interior'));
+      return view('tramites.interior.publicidad.index1', compact('solicitudes', 'modalidad'));
+
+      // return $this->Administrar($modalidad, $dependencia);
    }
 
-   public function planeacion(Request $r)
+   public function planeacion()
    {
-      $r->modalidad = '%';
-      $r->dependencia = 'PLANEACION';
-      return $this->Administrar($r);
+      $solicitudes = DB::select(Publicidad::getRadicados('TODAS', 'planeacion'));
+      return view('tramites.interior.publicidad.index1', compact('solicitudes'));
    }
 
    public function salud(Request $r)
    {
-      $r->modalidad = '%';
-      $r->dependencia = 'SALUD';
-      return $this->Administrar($r);
+      $solicitudes = DB::select(Publicidad::getRadicados('TODAS', 'salud'));
+      return view('tramites.interior.publicidad.index1', compact('solicitudes'));
    }
 
    public function hacienda(Request $r)
@@ -104,18 +105,20 @@ class PublicidadAdmin extends Controller
       return $this->Administrar($r);
    }
 
-   public function detalle(Request $req, $id)
+   public function detalle($id)
    {
       $solicitud = Publicidad::findOrFail($id);
       $persona = Persona::Find($solicitud->PersonaId);
 
       $documento = PublicidadAdjunto::where('Radicado', $solicitud->radicado)->get();
+
       $documentos = [];
       if ($documento->count() > 0) {
          $documentos = $documento->getDictionary();
       }
 
       $novedad = PublicidadNovedad::where('SolicitudId', $solicitud->id)->get();
+
       $novedades = [];
 
       if ($novedad->count() > 0) {
@@ -131,7 +134,8 @@ class PublicidadAdmin extends Controller
          ->first();
 
       $vista = $this->vistas($solicitud->dependencia, $solicitud->modalidad);
-      $pendiente_pago = false;
+      $vista = "tramites.interior.publicidad.detalle";
+
       $fecha_actual = date('d-m-Y');
       $fecha_limite = date('d-m-Y', strtotime($fecha_actual . '+ 2 month'));
 
@@ -142,51 +146,96 @@ class PublicidadAdmin extends Controller
          }
       }
 
-      return view($vista, compact('persona', 'solicitud', 'detalle', 'adjunto', 'novedades', 'documentos', 'pendiente_pago', 'fecha_limite'));
+      $config_novedades = DB::select("SELECT estado_id AS estado_id,nov.id AS novedad_id,estado,titulo_estado,novedad,opcion,estado_sig
+      FROM publicidad_config_novedades AS nov
+      INNER JOIN publicidad_config_estados AS est ON nov.estado_id=est.id
+      WHERE estado_id=(SELECT id FROM publicidad_config_estados WHERE modalidad='$solicitud->modalidad' AND estado='$solicitud->estado_solicitud')AND dependencia='$solicitud->dependencia'");
+
+      return view($vista, compact('persona', 'solicitud', 'detalle', 'adjunto', 'novedades', 'documentos', 'config_novedades', 'fecha_limite'));
    }
 
    public function AgregarNovedad(Request $req)
    {
       $solicitud = Publicidad::Find($req->SolicitudId);
+
       if (!empty($solicitud)) {
-         $tipo = ['', 'Revision de documentos', 'Concepto tecnico planeacion', 'Concepto tecnico transito', 'concepto tecnico salud', 'Viabilidad del permiso', 'Presentación de requisitos finales', 'Revisión de requisitos finales', 'Liquidacion', 'Acto administrativo'];
 
-         $novedad = new PublicidadNovedad();
-         $novedad->NovedadComentario = $req->NovedadComentario;
-         $novedad->NovedadEstado = $req->Novedad[$req->tiponovedad];
-         $novedad->NovedadTipo = $tipo[$req->tiponovedad];
-         $novedad->SolicitudId = $solicitud->id;
-         $novedad->FuncionarioId = 1;
+         DB::beginTransaction();
 
-         $solicitud->estado_solicitud = $this->estado($req->tiponovedad, $novedad->NovedadEstado, $solicitud->modalidad);
-         $solicitud->dependencia = $this->destino($req->tiponovedad, $novedad->NovedadEstado, $solicitud->modalidad);
+         try {
 
-         $solicitud->save();
+            $config_novedad = DB::select("SELECT estado,titulo_estado,dependencia,novedad,opcion,estado_sig FROM publicidad_config_estados pce
+            INNER JOIN publicidad_config_novedades AS pcn ON pce.id=pcn.estado_id  WHERE pcn.id=$req->novedad LIMIT 1;");
 
-         $docs = [$novedad->NovedadTipo];
-         $documentos = PublicidadAdmin::CargarDoc($req, $docs, $solicitud->radicado, $req->SolicitudId);
+            $estado_sig = $config_novedad[0]->estado_sig;
 
-         $user = DadepGeneral::GetUser();
+            $estado_siguiente = DB::select("SELECT estado,titulo_estado,dependencia,novedad,opcion,estado_sig FROM publicidad_config_estados pce
+            INNER JOIN publicidad_config_novedades AS pcn ON pce.id=pcn.estado_id  WHERE pce.id=$estado_sig LIMIT 1;");
 
-         if ($novedad->save()) {
-            $per = Persona::Find($solicitud->PersonaId);
 
-            $solicitud->Comentario = $novedad->NovedadComentario;
-            $solicitud->NovedadTipo = $novedad->NovedadTipo;
-            $solicitud->NovedadEstado = $novedad->NovedadEstado;
-            $solicitud->PerNombre = $per->PersonaNombre . ' ' . $per->PersonaApe;
+            $novedad = new PublicidadNovedad();
+            $novedad->NovedadTipo = $config_novedad[0]->opcion;
+            $novedad->NovedadComentario = $req->observacion;
+            $novedad->NovedadEstado = $config_novedad[0]->estado;
+            $novedad->FuncionarioId = 1;
+            $novedad->SolicitudId = $req->SolicitudId;
+            $novedad->save();
 
-            PublicidadAdmin::sendMail($per, $solicitud, 'tramites.PublicidadAdmin.CorreoSol', false, reset($documentos));
+            if (count($estado_siguiente) > 0) {
+               $solicitud->estado_solicitud = $estado_siguiente[0]->estado;
+               $solicitud->dependencia = $estado_siguiente[0]->dependencia;
+               $solicitud->novedad = $estado_siguiente[0]->novedad;
+            } else {
+               $solicitud->estado_solicitud = "finalizado";
+               $solicitud->dependencia = 'interior';
+               $solicitud->novedad = 'Proceso finalizado';
+            }
 
-            // $auditoria = Auditoria::create([
-            //    'usuario' => $user,
-            //    'proceso_afectado' => 'Radicado-Publicidad-' . $solicitud->radicado,
-            //    'tramite' => 'PUBLICIDAD EXTERIOR VISUAL',
-            //    'radicado' => $solicitud->radicado,
-            //    'accion' => 'update a estado ' . $solicitud->estado_solicitud . ' ' . $novedad->NovedadTipo . ' ' . $novedad->NovedadEstado,
-            //    'observacion' => $req->NovedadComentario,
-            // ]);
+            $solicitud->save();
+
+            $folder = 'documentos_publicidad/' . $solicitud->radicado;
+
+            foreach ($req->allFiles() as $key => $file) {
+               $documentos = PublicidadAdjunto::where('radicado', $solicitud->radicado)->where('codigo_adjunto', $config_novedad[0]->estado)->get();
+
+               if ($documentos->count() == 0) {
+                  $documento = new PublicidadAdjunto;
+                  $documento->publicidad_id = $solicitud->id;
+                  $documento->codigo_adjunto = $config_novedad[0]->estado;
+                  $documento->nombre_adjunto = $config_novedad[0]->titulo_estado;
+                  $documento->ruta = $folder . '/' . $config_novedad[0]->estado . ".pdf";
+                  $documento->radicado = $solicitud->radicado;
+                  $documento->save();
+
+                  $file->storeAs($folder, $config_novedad[0]->estado . ".pdf");
+               }
+            }
+
+            DB::commit();
+         } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
          }
+
+         // if ($novedad->save()) {
+         //    $per = Persona::Find($solicitud->PersonaId);
+
+         //    $solicitud->Comentario = $novedad->NovedadComentario;
+         //    $solicitud->NovedadTipo = $novedad->NovedadTipo;
+         //    $solicitud->NovedadEstado = $novedad->NovedadEstado;
+         //    $solicitud->PerNombre = $per->PersonaNombre . ' ' . $per->PersonaApe;
+
+         //    PublicidadAdmin::sendMail($per, $solicitud, 'tramites.PublicidadAdmin.CorreoSol', false, reset($documentos));
+
+         //    // $auditoria = Auditoria::create([
+         //    //    'usuario' => $user,
+         //    //    'proceso_afectado' => 'Radicado-Publicidad-' . $solicitud->radicado,
+         //    //    'tramite' => 'PUBLICIDAD EXTERIOR VISUAL',
+         //    //    'radicado' => $solicitud->radicado,
+         //    //    'accion' => 'update a estado ' . $solicitud->estado_solicitud . ' ' . $novedad->NovedadTipo . ' ' . $novedad->NovedadEstado,
+         //    //    'observacion' => $req->NovedadComentario,
+         //    // ]);
+         // }
       }
       // echo $novedad->NovedadEstado;
       // echo $solicitud->dependencia;

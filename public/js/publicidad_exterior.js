@@ -65,14 +65,6 @@ doc.addEventListener('DOMContentLoaded', function () {
          validarTipoPersona(e.target.value);
       }
 
-      if (e.target.matches('#ancho_publicidad') || e.target.matches('#alto_publicidad') || e.target.matches('#numero_caras')) {
-         let ancho = doc.getElementById('ancho_publicidad').value;
-         let alto = doc.getElementById('alto_publicidad').value;
-         let numero_caras = doc.getElementById('numero_caras').value;
-         let area_total = (ancho * alto) * numero_caras;
-         doc.getElementById('area_total').value = area_total;
-      }
-
       if (e.target.matches('#tipo_publicidad')) {
          if (e.target.value == 'RENOVACION') {
             doc.getElementById('divRenovacion').classList.remove('d-none');
@@ -88,103 +80,90 @@ doc.addEventListener('DOMContentLoaded', function () {
             doc.getElementById('fecha_renovacion').required = false;
          }
       }
+
+      if (e.target.matches('#publicidad_modalidad')) {
+         let modalidad = e.target.value;
+         if (modalidad) {
+            $.ajax({
+               url: '/publicidad-exterior/solicitud/modalidad/' + modalidad,
+               type: 'GET',
+               success: function (response) {
+                  $('#divVistasModalidades').html(response);
+                  cargarAdjuntos(modalidad);
+
+                  $('#dynamic-script').remove();
+                  // Cargar el nuevo script correspondiente a la modalidad
+                  var scriptPath = '/js/publicidad_' + modalidad + '.js';
+                  var scriptElement = document.createElement('script');
+                  scriptElement.src = scriptPath;
+                  scriptElement.id = 'dynamic-script'; // Para que sea fácil de eliminar después si cambia la modalidad
+                  document.body.appendChild(scriptElement);
+               },
+               error: function (xhr) {
+                  $('#divVistasModalidades').html('<p>Ha ocurrido un error al cargar la vista.</p>');
+               }
+            });
+         } else {
+            $('#divVistasModalidades').html(''); // Limpiar el div si no hay selección
+            $('#dynamic-script').remove();
+         }
+      }
    });
 
 
    let frmPersona = doc.getElementById('myForm');
-   frmPersona.addEventListener('submit', (e) => {
-      e.preventDefault();
-      let formData = new FormData(frmPersona);
 
-      $(doc).on({
-         ajaxStart: function () {
-            $("#loadMe").modal({
-               backdrop: "static",
-               keyboard: false,
-               show: true,
-            });
-         },
-         ajaxStop: function () {
-            setInterval(() => {
-               $('#loadMe').modal('hide');
-            }, 1000);
-         }
-      });
-      $.ajax({
-         type: "POST",
-         url: "/publicidad-exterior/personas/guardar",
-         data: formData,
-         processData: false,
-         contentType: false,
-         beforeSend: function () {
+   if (frmPersona){
+      frmPersona.addEventListener('submit', (e) => {
+         e.preventDefault();
+         let formData = new FormData(frmPersona);
 
-         },
-         success: function (response) {
-            if (response.success) {
-               $('#loadMe').modal('hide');
-               Swal.fire({
-                  icon: 'success',
-                  title: 'Persona guardada correctamete',
-                  text: 'Continue haciendo su solicitud'
+         $(doc).on({
+            ajaxStart: function () {
+               $("#loadMe").modal({
+                  backdrop: "static",
+                  keyboard: false,
+                  show: true,
                });
+            },
+            ajaxStop: function () {
                setInterval(() => {
-                  window.location.href = "/publicidad-exterior/solicitud/" + response.persona.PersonaDoc;
-               }, 2000);
-            } else {
-               $('#loadMe').modal('hide');
-               printErrorMsg(response.error);
+                  $('#loadMe').modal('hide');
+               }, 1000);
             }
-         },
-         error: function () {
-            alert("error de petición ajax");
-         },
-      }).done(function () {
-         $('#loadMe').modal('hide');
-      })
-   });
+         });
+         $.ajax({
+            type: "POST",
+            url: "/publicidad-exterior/personas/guardar",
+            data: formData,
+            processData: false,
+            contentType: false,
+            beforeSend: function () {
 
-});
-
-$('#modalidad').on('select2:select', function (e) {
-   let data = e.params.data;
-   let modalidad = data.id;
-
-   switch (modalidad) {
-      //vallas
-      case '0':
-         doc.getElementById('divVallas').classList.remove('d-none');
-         doc.getElementById('numero_elementos').value = '1';
-         doc.getElementById('numero_elementos').readOnly = true;
-         doc.getElementById('tipo_valla').required = true;
-         cargarAdjuntos('vallas');
-         break;
-      case '1':
-         doc.getElementById('div_valla').classList.add('d-none');
-         doc.getElementById('div_pantalla').classList.remove('d-none');
-         doc.getElementById('div_otros').classList.add('d-none');
-         break;
-      case '2':
-         doc.getElementById('div_valla').classList.add('d-none');
-         doc.getElementById('div_pantalla').classList.add('d-none');
-         doc.getElementById('div_otros').classList.remove('d-none');
-         break;
-      case '3':
-         doc.getElementById('div_valla').classList.add('d-none');
-         doc.getElementById('div_pantalla').classList.add('d-none');
-         doc.getElementById('div_otros').classList.remove('d-none');
-         break;
-      case '4':
-         doc.getElementById('div_valla').classList.add('d-none');
-         doc.getElementById('div_pantalla').classList.add('d-none');
-         doc.getElementById('div_otros').classList.remove('d-none');
-         break;
-      case '5':
-         doc.getElementById('div_valla').classList.add('d-none');
-         doc.getElementById('div_pantalla').classList.add('d-none');
-         doc.getElementById('div_otros').classList.remove('d-none');
-         break;
-      default:
-         break;
+            },
+            success: function (response) {
+               if (response.success) {
+                  $('#loadMe').modal('hide');
+                  Swal.fire({
+                     icon: 'success',
+                     title: 'Persona guardada correctamete',
+                     text: 'Continue haciendo su solicitud'
+                  });
+                  setInterval(() => {
+                     window.location.href = "/publicidad-exterior/solicitud/" + response.persona.PersonaDoc;
+                  }, 2000);
+               } else {
+                  $('#loadMe').modal('hide');
+                  printErrorMsg(response.error);
+               }
+            },
+            error: function () {
+               alert("error de petición ajax");
+            },
+         }).done(function () {
+            $('#loadMe').modal('hide');
+         })
+      });
    }
 });
 
@@ -395,6 +374,7 @@ $('.documentos_publicidad').fileinput({
    overwriteInitial: true,
    maxFileSize: 10000
 });
+
 
 
 
