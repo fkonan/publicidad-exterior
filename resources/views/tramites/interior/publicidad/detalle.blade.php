@@ -119,7 +119,7 @@
 
 
                   <tr style="background-color:#004884">
-                     <td colspan="32" style="background-color:#004884; color:white">Administración del Trámite
+                     <td colspan="3" style="background-color:#004884; color:white">Administración del Trámite
                      </td>
                   </tr>
                   <tr>
@@ -128,10 +128,10 @@
                               class="govco-icon govco-icon-check-p size-1x"></span></p>
                         </p>
                      </td>
-                     <td><strong>Fecha y hora de la solicitud</strong><br>
+                     <td colspan="2"><strong>Fecha y hora de la solicitud</strong><br>
                         {{ $solicitud->created_at }}
                      </td>
-                     <td></td>
+
                   </tr>
 
                   <!-- Documentos -->
@@ -291,4 +291,23 @@
          }
       }
    }
+
+   document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('fecha_inicio').addEventListener('change', calcularDias);
+      document.getElementById('fecha_fin').addEventListener('change', calcularDias);
+   });
+
+   function calcularDias() {
+      let fecha_inicio = document.getElementById('fecha_inicio').value;
+      let fecha_fin = document.getElementById('fecha_fin').value;
+      if(fecha_inicio=='' || fecha_fin==''){
+         return;
+      }
+      let fecha_inicial = new Date(fecha_inicio);
+      let fecha_final = new Date(fecha_fin);
+      let resultado = fecha_final - fecha_inicial;
+      let dias = resultado / (1000 * 60 * 60 * 24);
+      document.getElementById('dia_publicidad').value = dias;
+   }
+
 </script>

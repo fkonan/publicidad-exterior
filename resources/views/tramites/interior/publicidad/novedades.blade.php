@@ -10,7 +10,7 @@
 @foreach ($novedades as $novedad)
 <tr>
    <td>{{ $novedad->NovedadEstado}} </td>
-   <td>{{ $novedad->NovedadTipo }}  </td>
+   <td>{{ $novedad->NovedadTipo }} </td>
    <td>{{ $novedad->NovedadComentario }} | {{$novedad->created_at }}</td>
 </tr>
 @endforeach
@@ -45,7 +45,7 @@ return $novedad->NovedadTipo === 'Revision de documentos';
             <option value="">Seleccione una opción</option>
             @foreach ($config_novedades as $novedad)
             <option value="{{$novedad->novedad_id}}">{{$novedad->opcion}}
-            @endforeach
+               @endforeach
          </select>
          @error('novedad')
          <span class="invalid-feedback" role="alert">
@@ -58,9 +58,9 @@ return $novedad->NovedadTipo === 'Revision de documentos';
    <td colspan="2">
       <div class="form-group">
          <label for="observacion">Observaciones</label>
-         <textarea name="observacion" id="observacion"
-         maxlength="255" class="form-control  @error('observacion') is-invalid @enderror"
-            id="observacion" cols="2" rows="4"></textarea>
+         <textarea name="observacion" id="observacion" maxlength="255"
+            class="form-control  @error('observacion') is-invalid @enderror" id="observacion" cols="2"
+            rows="4"></textarea>
          @error('observacion')
          <span class="invalid-feedback" role="alert">
             <strong class="text-danger">{{ $message }}</strong>
@@ -69,7 +69,10 @@ return $novedad->NovedadTipo === 'Revision de documentos';
       </div>
    </td>
 </tr>
-@if ($solicitud->dependencia == 'HACIENDA' && $pendiente_pago==false)
+<tr>
+
+</tr>
+@if ($solicitud->dependencia == 'hacienda' && $pendiente_pago==false)
 <tr>
    <td colspan="2">
       <button type="button" id="btnLiquidar" class="btn btn-round btn-middle btn-outline-info"
@@ -82,10 +85,11 @@ return $novedad->NovedadTipo === 'Revision de documentos';
       <div class="form-group">
          <label for="documento_respuesta">Cargar Respuesta</label>
          <input type="file" accept="application/pdf" name="documento_respuesta" id="documento_respuesta"
-            class="form-control @error('documento_respuesta') is-invalid @enderror" @if ($solicitud->dependencia == 'SALUD' ||
+            class="form-control @error('documento_respuesta') is-invalid @enderror" @if ($solicitud->dependencia ==
+         'SALUD' ||
          $solicitud->dependencia == 'PLANEACION')
-         required @endif>
-         @error('documento0')
+         required @endif @if($config_novedades[0]->finaliza==1)required @endif>
+         @error('documento_respuesta')
          <span class="invalid-feedback" role="alert">
             <strong class="text-danger">{{ $message }}</strong>
          </span>
@@ -93,16 +97,54 @@ return $novedad->NovedadTipo === 'Revision de documentos';
       </div>
 
    </td>
-   <td colspan="2">
+   @if($config_novedades[0]->finaliza==1)
+   <td>
       <div class="form-group">
-         <button type="submit" id="myBtnEspacio" class="btn btn-round btn-middle btn-outline-info" id="Boton">Actualizar
-            estado</button>
-         <button style="font-size:15px;" class="btn btn-round btn-middle btn_carga d-none" type="button" disabled><span
-               class="spinner-grow spinner-grow-sm text-primary" role="status" aria-hidden="true"></span> Actualizando
-            estado...</button>
-         <a href="/tramites/interior/publicidad/{{ $solicitud->modalidad }}" class="btn btn-round btn-high">Volver</a>
+         <label for="fecha_inicio">Fecha de inicio</label>
+         <input type="date" name="fecha_inicio" id="fecha_inicio"
+            class="form-control @error('fecha_inicio') is-invalid @enderror" @if($config_novedades[0]->finaliza==1)
+         required @endif>
+         @error('fecha_inicio')
+         <span class="invalid-feedback" role="alert">
+            <strong class="text-danger">{{ $message }}</strong>
+         </span>
+         @enderror
       </div>
    </td>
+
+   <td>
+      <div class="row">
+         <div class="col">
+            <label for="fecha_fin">Fecha final</label>
+            <input type="date" name="fecha_fin" id="fecha_fin"
+               class="form-control @error('fecha_fin') is-invalid @enderror" @if($config_novedades[0]->finaliza==1)
+            required @endif>
+            @error('fecha_fin')
+            <span class="invalid-feedback" role="alert">
+               <strong class="text-danger">{{ $message }}</strong>
+            </span>
+            @enderror
+         </div>
+         <div class="col">
+            <label for="dia_publicidad">Duración de la publicidad (días)</label>
+            <input class="form-control" type="text" name="dia_publicidad" id="dia_publicidad" readOnly value="0">
+         </div>
+      </div>
+   </td>
+   @endif
+
+</tr>
+<tr>
+   <td>
+      <div class="form-group">
+         <button type="submit" id="myBtnEspacio" class="btn btn-round btn-middle btn-outline-info" id="Boton">Actualizar
+         </button>
+      </div>
+   </td>
+   <td>
+      <a href="/tramites/interior/publicidad/{{ $solicitud->modalidad }}" class="btn btn-round btn-high">Volver</a>
+   </td>
+   <td></td>
 </tr>
 
 

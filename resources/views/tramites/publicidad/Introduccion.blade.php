@@ -8,7 +8,7 @@
 
    @include('tramites.titulo')
 
-   <div class="row">
+   {{-- <div class="row">
       <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
          <div class="card govco-card border-0 shadow-none" style="border-radius: 0px;">
             <h1 class="headline-xl-govco">@yield('title')</h1>
@@ -39,7 +39,7 @@
       <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
          @include('tramites.publicidad.informativo')
       </div>
-   </div>
+   </div> --}}
 </div>
 @include('tramites.publicidad.form_consulta')
 

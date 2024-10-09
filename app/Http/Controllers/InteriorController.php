@@ -383,15 +383,15 @@ class InteriorController extends Controller
    /** PUBLICIDAD EXTERIOR */
    public function publicidadIndex()
    {
-      $count_comerciales = Publicidad::where('modalidad', 'comerciales')->count();
-      $count_inmobiliarios = Publicidad::where('modalidad', 'inmobiliarios')->count();
-      $count_colombina = Publicidad::where('modalidad', 'colombina')->count();
-      $count_murales = Publicidad::where('modalidad', 'murales')->count();
-      $count_vallas = Publicidad::where('modalidad', 'vallas')->count();
-      $count_pendones = Publicidad::where('modalidad', 'pendones')->count();
-      $count_pasacalles = Publicidad::where('modalidad', 'pasacalles')->count();
-      $count_aerea = Publicidad::where('modalidad', 'aerea')->count();
-      $count_movil = Publicidad::where('modalidad', 'movil')->count();
+      $count_comerciales = Publicidad::where('modalidad', 'comerciales')->where('estado_solicitud', '<>', 'finalizado')->count();
+      $count_inmobiliarios = Publicidad::where('modalidad', 'inmobiliarios')->where('estado_solicitud', '<>', 'finalizado')->count();
+      $count_colombina = Publicidad::where('modalidad', 'colombina')->where('estado_solicitud', '<>', 'finalizado')->count();
+      $count_murales = Publicidad::where('modalidad', 'murales')->where('estado_solicitud', '<>', 'finalizado')->count();
+      $count_vallas = Publicidad::where('modalidad', 'vallas')->where('estado_solicitud', '<>', 'finalizado')->count();
+      $count_pendones = Publicidad::where('modalidad', 'pendones')->where('estado_solicitud', '<>', 'finalizado')->count();
+      $count_pasacalles = Publicidad::where('modalidad', 'pasacalles')->where('estado_solicitud', '<>', 'finalizado')->count();
+      $count_aerea = Publicidad::where('modalidad', 'aerea')->where('estado_solicitud', '<>', 'finalizado')->count();
+      $count_movil = Publicidad::where('modalidad', 'movil')->where('estado_solicitud', '<>', 'finalizado')->count();
 
       return view('tramites.interior.publicidad.index', compact('count_comerciales', 'count_inmobiliarios', 'count_colombina', 'count_murales', 'count_vallas', 'count_pendones', 'count_pasacalles', 'count_aerea', 'count_movil'));
    }

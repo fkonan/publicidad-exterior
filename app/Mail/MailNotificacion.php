@@ -31,10 +31,11 @@ class MailNotificacion extends Mailable
     */
    public function build()
    {
-      $Solicitud = $this->detalleCorreo['Solicitud'];
+      $Solicitud = $this->detalleCorreo['publicidad'];
       $Solicitud['liquidacion'] = $this->detalleCorreo['liquidacion'];
       $Solicitud['radicado'] = $this->detalleCorreo['radicado'];
-      $Solicitud['PerNombre'] = $this->detalleCorreo['nombres'];
+      $Solicitud['nombre_completo'] = $this->detalleCorreo['nombre_completo'];
+      $Solicitud['comentarios'] = $this->detalleCorreo['comentarios'];
       if ($this->detalleCorreo['documento'] == 'NO') {
          return  $this->subject($this->detalleCorreo['Subject'])->view($this->vista, compact('Solicitud'));
       } else {

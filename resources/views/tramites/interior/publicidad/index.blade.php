@@ -54,36 +54,15 @@
             <div class="card govco-card">
                <div class="card-header govco-card-header">
                   <span class="govco-icon govco-icon-analytic-p"> </span>
-                  AVISOS DE IDENTIFICACIÓN DE ESTABLECIMIENTOS COMERCIALES
-                  <span class="badge badge-warning">{{ $count_comerciales }}</span>
-               </div>
-               <div class="card-body">
-                  <p class="card-text">A continuación se listarán las solicitudes de esta modalidad</p>
-               </div>
-               <div class="card-footer govco-card-footer govco-center">
-
-                  <a class="btn-low-mix-govco align-column-govco"
-                     href="{{ route('interior.publicidad.listarSolicitudes', 'comerciales') }}">
-                     <span class="btn-mix-govco__title">Ver más detalles</span>
-                     <span class="btn-mix-govco__icon govco-icon govco-icon-simpled-arrow"></span>
-                  </a>
-               </div>
-            </div>
-         </div>
-
-         <div class="col-md-6">
-            <div class="card govco-card">
-               <div class="card-header govco-card-header">
-                  <span class="govco-icon govco-icon-analytic-p"> </span>
-                  AVISOS DE IDENTIFICACIÓN DE PROYECTOS INMOBILIARIOS
-                  <span class="badge badge-warning">{{ $count_inmobiliarios }}</span>
+                  VALLAS COMERCIALES
+                  <span class="badge badge-warning">{{ $count_vallas }}</span>
                </div>
                <div class="card-body">
                   <p class="card-text">A continuación se listarán las solicitudes de esta modalidad</p>
                </div>
                <div class="card-footer govco-card-footer govco-center">
                   <a class="btn-low-mix-govco align-column-govco"
-                     href="{{ route('interior.publicidad.listarSolicitudes', 'inmobiliarios') }}">
+                     href="{{ route('interior.publicidad.listarSolicitudes', 'vallas') }}">
                      <span class="btn-mix-govco__title">Ver más detalles</span>
                      <span class="btn-mix-govco__icon govco-icon govco-icon-simpled-arrow"></span>
                   </a>
@@ -116,6 +95,51 @@
             <div class="card govco-card">
                <div class="card-header govco-card-header">
                   <span class="govco-icon govco-icon-analytic-p"> </span>
+                  AVISOS DE IDENTIFICACIÓN DE PROYECTOS INMOBILIARIOS
+                  <span class="badge badge-warning">{{ $count_inmobiliarios }}</span>
+               </div>
+               <div class="card-body">
+                  <p class="card-text">A continuación se listarán las solicitudes de esta modalidad</p>
+               </div>
+               <div class="card-footer govco-card-footer govco-center">
+                  <a class="btn-low-mix-govco align-column-govco"
+                     href="{{ route('interior.publicidad.listarSolicitudes', 'inmobiliarios') }}">
+                     <span class="btn-mix-govco__title">Ver más detalles</span>
+                     <span class="btn-mix-govco__icon govco-icon govco-icon-simpled-arrow"></span>
+                  </a>
+               </div>
+            </div>
+         </div>
+
+         <div class="col-md-6">
+            <div class="card govco-card">
+               <div class="card-header govco-card-header">
+                  <span class="govco-icon govco-icon-analytic-p"> </span>
+                  AVISOS DE IDENTIFICACIÓN DE ESTABLECIMIENTOS COMERCIALES
+                  <span class="badge badge-warning">{{ $count_comerciales }}</span>
+               </div>
+               <div class="card-body">
+                  <p class="card-text">A continuación se listarán las solicitudes de esta modalidad</p>
+               </div>
+               <div class="card-footer govco-card-footer govco-center">
+
+                  <a class="btn-low-mix-govco align-column-govco"
+                     href="{{ route('interior.publicidad.listarSolicitudes', 'comerciales') }}">
+                     <span class="btn-mix-govco__title">Ver más detalles</span>
+                     <span class="btn-mix-govco__icon govco-icon govco-icon-simpled-arrow"></span>
+                  </a>
+               </div>
+            </div>
+         </div>
+
+
+
+
+
+         <div class="col-md-6">
+            <div class="card govco-card">
+               <div class="card-header govco-card-header">
+                  <span class="govco-icon govco-icon-analytic-p"> </span>
                   PUBLICIDAD AÉREA
                   <span class="badge badge-warning">{{ $count_aerea }}</span>
                </div>
@@ -133,25 +157,7 @@
             </div>
          </div>
 
-         <div class="col-md-6">
-            <div class="card govco-card">
-               <div class="card-header govco-card-header">
-                  <span class="govco-icon govco-icon-analytic-p"> </span>
-                  VALLAS COMERCIALES
-                  <span class="badge badge-warning">{{ $count_vallas }}</span>
-               </div>
-               <div class="card-body">
-                  <p class="card-text">A continuación se listarán las solicitudes de esta modalidad</p>
-               </div>
-               <div class="card-footer govco-card-footer govco-center">
-                  <a class="btn-low-mix-govco align-column-govco"
-                     href="{{ route('interior.publicidad.listarSolicitudes', 'vallas') }}">
-                     <span class="btn-mix-govco__title">Ver más detalles</span>
-                     <span class="btn-mix-govco__icon govco-icon govco-icon-simpled-arrow"></span>
-                  </a>
-               </div>
-            </div>
-         </div>
+
 
          <div class="col-md-6">
             <div class="card govco-card">

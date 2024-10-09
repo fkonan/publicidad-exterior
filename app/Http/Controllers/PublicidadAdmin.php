@@ -118,7 +118,6 @@ class PublicidadAdmin extends Controller
       }
 
       $novedad = PublicidadNovedad::where('SolicitudId', $solicitud->id)->get();
-
       $novedades = [];
 
       if ($novedad->count() > 0) {
@@ -146,11 +145,10 @@ class PublicidadAdmin extends Controller
          }
       }
 
-      $config_novedades = DB::select("SELECT estado_id AS estado_id,nov.id AS novedad_id,estado,titulo_estado,novedad,opcion,estado_sig
+      $config_novedades = DB::select("SELECT estado_id AS estado_id,nov.id AS novedad_id,estado,titulo_estado,novedad,opcion,estado_sig,finaliza
       FROM publicidad_config_novedades AS nov
       INNER JOIN publicidad_config_estados AS est ON nov.estado_id=est.id
       WHERE estado_id=(SELECT id FROM publicidad_config_estados WHERE modalidad='$solicitud->modalidad' AND estado='$solicitud->estado_solicitud')AND dependencia='$solicitud->dependencia'");
-
       return view($vista, compact('persona', 'solicitud', 'detalle', 'adjunto', 'novedades', 'documentos', 'config_novedades', 'fecha_limite'));
    }
 
@@ -164,7 +162,7 @@ class PublicidadAdmin extends Controller
 
          try {
 
-            $config_novedad = DB::select("SELECT estado,titulo_estado,dependencia,novedad,opcion,estado_sig FROM publicidad_config_estados pce
+            $config_novedad = DB::select("SELECT estado,titulo_estado,dependencia,novedad,opcion,estado_sig,finaliza FROM publicidad_config_estados pce
             INNER JOIN publicidad_config_novedades AS pcn ON pce.id=pcn.estado_id  WHERE pcn.id=$req->novedad LIMIT 1;");
 
             $estado_sig = $config_novedad[0]->estado_sig;
@@ -186,6 +184,11 @@ class PublicidadAdmin extends Controller
                $solicitud->dependencia = $estado_siguiente[0]->dependencia;
                $solicitud->novedad = $estado_siguiente[0]->novedad;
             } else {
+               if ($config_novedad[0]->finaliza == 1) {
+                  $solicitud->fecha_inicio = $req->fecha_inicio;
+                  $solicitud->fecha_fin = $req->fecha_fin;
+                  $solicitud->dia_publicidad = $req->dia_publicidad;
+               }
                $solicitud->estado_solicitud = "finalizado";
                $solicitud->dependencia = 'interior';
                $solicitud->novedad = 'Proceso finalizado';
@@ -210,6 +213,9 @@ class PublicidadAdmin extends Controller
                   $file->storeAs($folder, $config_novedad[0]->estado . ".pdf");
                }
             }
+
+            $personas = Persona::Find($solicitud->PersonaId);
+            PublicidadAdmin::sendMail($personas, $solicitud, $req->observacion, 'NO');
 
             DB::commit();
          } catch (\Exception $e) {
@@ -505,84 +511,32 @@ class PublicidadAdmin extends Controller
       return $ultimos;
    }
 
-   public static function sendMail($persona, $Cs, $vista1 = false, $vista2 = false, $doc = 'NO', $liquidacion = '')
+   public static function sendMail($persona, $publicidad, $comentarios, $doc = 'NO', $liquidacion = '')
    {
-      if ($Cs instanceof \Illuminate\Http\Request) {
-         dd('1', $Cs);
-         $detalleCorreo = [
-            'nombres' => $persona->PersonaNombre,
-            'radicado' => $Cs->request->all()['radicado'],
-            'Subject' => 'Solucitud publicidad exterior visual',
-            'documento' => $doc,
-            'fecha_pendiente' => null,
-            'estado' => null,
-            'mensaje' => null,
-            'Solicitud' => $Cs->request->all(),
-            'liquidacion' => $liquidacion,
-            'NovedadTipo' => $Cs->request->all()['NovedadTipo'],
-         ];
-
-         $detalleCorreo_fun = [
-            'nombres' => 'Funcionario Carlos guerrero',
-            'radicado' => $Cs->request->all()['radicado'],
-            'Subject' => 'Solicitud pendiente para revision de documentos No' . $Cs->request->all()['radicado'],
-            'documento' => 'NO',
-            'fecha_pendiente' => null,
-            'estado' => 'FUNCIONARIO',
-            'mensaje' => null,
-            'Solicitud' => $Cs->request->all(),
-            'liquidacion' => $liquidacion,
-         ];
-      } else {
-         $Cs = $Cs->toArray();
-         //dd('2', $Cs);
-         $detalleCorreo = [
-            'nombres' => $persona->PersonaNombre,
-            'radicado' => $Cs['radicado'],
-            'Subject' => 'Solucitud publicidad exterior visual',
-            'documento' => $doc,
-            'fecha_pendiente' => null,
-            'estado' => null,
-            'mensaje' => null,
-            'Solicitud' => $Cs,
-            'liquidacion' => $liquidacion,
-            'NovedadTipo' => $Cs['NovedadTipo'],
-         ];
-
-         $detalleCorreo_fun = [
-            'nombres' => 'Funcionario Carlos guerrero',
-            'radicado' => $Cs['radicado'],
-            'Subject' => 'Solicitud pendiente para revision de documentos No' . $Cs['radicado'],
-            'documento' => 'NO',
-            'fecha_pendiente' => null,
-            'estado' => 'FUNCIONARIO',
-            'mensaje' => null,
-            'Solicitud' => $Cs,
-            'liquidacion' => $liquidacion,
-         ];
-      }
+      $detalle_correo = [
+         'nombre_completo' => $persona->PersonaTip == 'Juridica' ? $persona->PersonaRazon : $persona->PersonaNombre . ' ' . $persona->PersonaApe,
+         'radicado' => $publicidad->radicado,
+         'Subject' => 'Solucitud publicidad exterior visual',
+         'documento' => $doc,
+         'liquidacion' => $liquidacion,
+         'publicidad' => $publicidad,
+         'comentarios' => $comentarios
+      ];
 
       $correo_funcionario = ['fstarblack@gmail.com'];
 
-      if ($Cs['dependencia'] == 'PLANEACION') {
+      if ($publicidad->dependencia == 'planeacion') {
          $correo_funcionario[] = 'fstarblack@gmail.com';
       }
 
-      if ($Cs['dependencia'] == 'SALUD') {
+      if ($publicidad->dependencia == 'salud') {
          $correo_funcionario[] = 'fstarblack@gmail.com';
       }
 
-      // envio de correo
-      if ($vista1 != false) {
-         Mail::to($persona->PersonaMail)
-            ->queue(new MailNotificacion($detalleCorreo, $vista1));
+      Mail::to($persona->PersonaMail)
+         ->queue(new MailNotificacion($detalle_correo, 'tramites.PublicidadAdmin.CorreoSol'));
 
-         Mail::to($correo_funcionario)
-            ->queue(new MailNotificacion($detalleCorreo, 'tramites.PublicidadAdmin.CorreoFun'));
-      }
-      if ($vista2 != false) {
-         dd('solo fuincionario');
-         Mail::to($correo_funcionario)->queue(new MailNotificacion($detalleCorreo, $vista1));
-      }
+      Mail::to($correo_funcionario)
+         ->queue(new MailNotificacion($detalle_correo, 'tramites.PublicidadAdmin.CorreoFun'));
    }
 }

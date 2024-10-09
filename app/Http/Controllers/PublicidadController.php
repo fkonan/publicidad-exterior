@@ -211,14 +211,14 @@ class PublicidadController extends Controller
          $novedades->SolicitudId = $publicidad->id;
          $novedades->save();
 
+         PublicidadAdmin::sendMail($personas, $publicidad, 'Radicación de solicitud', 'NO');
+
          DB::commit();
       } catch (\Exception $e) {
          DB::rollBack();
          throw $e;
       }
 
-      // PublicidadAdmin::sendMail($personas, $request, 'tramites.PublicidadAdmin.CorreoSol', false);
-      // return view('tramites.publicidad.ResSol', compact($publicidad->radicado));
       return view('tramites.publicidad.ResSol', ['radicado' => $publicidad->radicado]);
    }
 
@@ -362,6 +362,10 @@ class PublicidadController extends Controller
                   $file->storeAs($folder, $key . ".pdf");
                }
             }
+
+            $personas = Persona::Find($solicitud->PersonaId);
+
+            PublicidadAdmin::sendMail($personas, $solicitud, $config_novedad[0]->novedad, 'NO');
 
             DB::commit();
          } catch (\Exception $e) {
